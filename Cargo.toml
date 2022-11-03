@@ -1,0 +1,25 @@
+[package]
+name = "mpr121-hal"
+version = "0.1.0"
+edition = "2021"
+authors = ["Tendsin Mende <tendsin@protonmail.com>"]
+repository = "https://gitlab.com/tendsinmende/mpr121-hal"
+license = "MIT OR Apache-2.0"
+description = "MPR121 proximity capacitive touch sensor controller hal driver implementation."
+readme = "README.md"
+keywords = ["sensor", "capacitive", "embedded-hal-driver", "embedded-hal", "hal"]
+categories = ["embedded", "hardware-support", "no-std"]
+homepage = "https://gitlab.com/tendsinmende/mpr121-hal"
+documentation = "https://docs.rs/mpr121-hal/latest/"
+include = [
+    "/src/lib.rs",
+    "/Cargo.toml",
+    "/README.md",
+    "/CHANGELOG.md",
+    "/LICENSE-MIT",
+    "/LICENSE-APACHE",
+]
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+embedded-hal = "0.2.7"
