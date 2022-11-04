@@ -66,8 +66,11 @@ pub enum Mpr121Error{
     ReadError(u8),
     ///If a write operation failed, contains the address that failed.
     WriteError(u8),
-    ///If sending the reset signal failed
-    ResetFailed,
+    ///If sending the reset signal failed, contains the register that failed.
+    ResetFailed{
+        was_read: bool,
+        reg: u8
+    },
     ///If the reset did not happen as expected
     InitFailed,
 }
@@ -109,7 +112,13 @@ impl<I2C: Read + Write> Mpr121<I2C> {
         };
 
         //reset
-        dev.write_register(SOFTRESET, 0x63).map_err(|_| Mpr121Error::ResetFailed)?;
+        dev.write_register(SOFTRESET, 0x63).map_err(
+            |e| match e{
+                Mpr121Error::ReadError(reg) => Mpr121Error::ResetFailed { was_read: true, reg },
+                Mpr121Error::WriteError(reg) => Mpr121Error::ResetFailed{was_read: false, reg },
+                _ => Mpr121Error::ResetFailed{was_read: false, reg: 0xff}
+            }
+        )?;
         //Stop
         dev.write_register(ECR, 0x0)?;
         //read config register
