@@ -12,6 +12,11 @@ The crate uses the [embeded-hal](https://crates.io/crates/embedded-hal) crate to
 
 The implementation provides a similar API to the C++ Adafruit library. It should work with similar boards using the Mpr121 as well.
 
+## Development 
+
+The crate is considered complete at the moment. It provides the core functionality as well as helper functions. It stays in pre-1.0 release in case 
+errors are found within the next year. Otherwise it'll change to 1.0 around Nov. 2023.
+
 ## License
 
 Licensed under either of
