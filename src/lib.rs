@@ -308,7 +308,7 @@ impl<I2C: Write + WriteRead> Mpr121<I2C> {
         if let Err(_) = self.i2c.write_read(self.addr as u8, &[reg], &mut val){
             return Err(Mpr121Error::ReadError(reg));
         }
-        Ok(u16::from_be_bytes(val))
+        Ok(u16::from_le_bytes(val))
     }
 }
 
