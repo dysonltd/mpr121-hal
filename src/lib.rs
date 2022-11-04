@@ -9,19 +9,18 @@
 //!
 #![deny(
     unsafe_code,
-//    warnings
+    warnings
 )]
 #![no_std]
 
 extern crate embedded_hal as hal;
-use core::fmt::Display;
 
-use embedded_hal::blocking::i2c::{Read, Write, WriteRead};
+use embedded_hal::blocking::i2c::{Write, WriteRead};
 
 const TOUCHSTATUS_L: u8 = 0x00;
-const TOUCHSTATUS_H: u8 = 0x01;
+//const TOUCHSTATUS_H: u8 = 0x01;
 const FILTDATA_0L: u8 = 0x04;
-const FILTDATA_0H: u8 = 0x05;
+//const FILTDATA_0H: u8 = 0x05;
 const BASELINE_0: u8 = 0x1E;
 const MHDR: u8 = 0x2B;
 const NHDR: u8 = 0x2C;
@@ -40,20 +39,20 @@ const RELEASETH_0: u8 = 0x42;
 const DEBOUNCE: u8 = 0x5B;
 const CONFIG1: u8 = 0x5C;
 const CONFIG2: u8 = 0x5D;
-const CHARGECURR_0: u8 = 0x5F;
-const CHARGETIME_1: u8 = 0x6C;
+//const CHARGECURR_0: u8 = 0x5F;
+//const CHARGETIME_1: u8 = 0x6C;
 const ECR: u8 = 0x5E;
 const AUTOCONFIG0: u8 = 0x7B;
-const AUTOCONFIG1: u8 = 0x7C;
+//const AUTOCONFIG1: u8 = 0x7C;
 const UPLIMIT: u8 = 0x7D;
 const LOWLIMIT: u8 = 0x7E;
 const TARGETLIMIT: u8 = 0x7F;
 
-const GPIODIR: u8 = 0x76;
-const GPIOEN: u8 = 0x77;
-const GPIOSET: u8 = 0x78;
-const GPIOCLR: u8 = 0x79;
-const GPIOTOGGLE: u8 = 0x7A;
+//const GPIODIR: u8 = 0x76;
+//const GPIOEN: u8 = 0x77;
+//const GPIOSET: u8 = 0x78;
+//const GPIOCLR: u8 = 0x79;
+//const GPIOTOGGLE: u8 = 0x7A;
 
 const SOFTRESET: u8 = 0x80;
 
@@ -76,7 +75,7 @@ pub enum Mpr121Error{
 }
 
 ///The four values the sensor can be addressed as. Note that the address of the device is determined by
-/// where the `ADDR` pin is connected to. Default is used if no connection, or a connction to `VSS` is made.
+/// where the `ADDR` pin is connected to. Default is used if no connection, or a connection to `VSS` is made.
 ///
 /// Have a look at page 4 "serial communication" for further specification.
 #[repr(u8)]
@@ -97,7 +96,6 @@ pub struct Mpr121<I2C: Write + WriteRead> {
 
 impl<I2C: Write + WriteRead> Mpr121<I2C> {
 
-    pub const DEFAULT_I2CADDR: u8 = 0x5a;
     pub const DEFAULT_TOUCH_THRESHOLD: u8 = 12;
     pub const DEFAULT_RELEASE_THRESOLD: u8 = 6;
 
@@ -314,8 +312,6 @@ impl<I2C: Write + WriteRead> Mpr121<I2C> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn it_works() {
         unimplemented!()
