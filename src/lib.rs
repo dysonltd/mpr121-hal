@@ -55,11 +55,35 @@ const GPIOTOGGLE: u8 = 0x7A;
 
 const SOFTRESET: u8 = 0x80;
 
+
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Eq, Ord)]
+pub enum Mpr121Error{
+    ///If an operation exceeds the channel count (typically 12).
+    ChannelExceed,
+    ///If a read operation failed, contains the address that failed.
+    ReadError(u8),
+    ///If a write operation failed, contains the address that failed.
+    WriteError(u8),
+    Reset
+}
+
+///The four values the sensor can be addressed as. Note that the address of the device is determined by
+/// where the `ADDR` pin is connected to. Default is used if no connection, or a connction to `VSS` is made.
+///
+/// Have a look at page 4 "serial communication" for further specification.
+pub enum Mpr121Address{
+    Default = 0x5a,
+    Vdd = 0x5b,
+    Sda = 0x5c,
+    Scl = 0x5d
+}
+
 ///Main device definition.
 pub struct Mpr121<I2C: Read + Write> {
     i2c: I2C,
-    addr: u8,
+    addr: Mpr121Address,
 }
+
 
 impl<I2C: Read + Write> Mpr121<I2C> {
 
@@ -68,13 +92,21 @@ impl<I2C: Read + Write> Mpr121<I2C> {
     pub const DEFAULT_RELEASE_THRESOLD: u8 = 6;
 
     ///Creates the driver for the given I²C ports. Assumes that the I²C port is configured as master.
-    pub fn new(i2c: I2C, addr: u8) -> Self {
-        let dev = Mpr121 {
+    ///
+    /// Note that we use the same default values as the Adafruit implementation.
+    pub fn new(i2c: I2C, addr: Mpr121Address) -> Result<Self, Mpr121Error> {
+        let mut dev = Mpr121 {
             i2c,
             addr,
         };
 
-        dev
+        //reset
+        dev.write_register(SOFTRESET, 0x63)?;
+
+        //Initialise the device to the same settings as
+
+        
+        Ok(dev)
     }
 
     ///Initializes the driver assuming the sensors address is the default one (0x5a).
@@ -82,8 +114,8 @@ impl<I2C: Read + Write> Mpr121<I2C> {
     /// Or following the documentation on setting a driver address, and use [new](Self::new) to specify the address.
     ///
     /// Have a look at [new](Self::new) for further documentation.
-    pub fn new_default(i2c: I2C) -> Self {
-        Self::new(i2c, Self::DEFAULT_I2CADDR)
+    pub fn new_default(i2c: I2C) -> Result<Self, Mpr121Error> {
+        Self::new(i2c, Mpr121Address::Default)
     }
 
 
@@ -93,8 +125,9 @@ impl<I2C: Read + Write> Mpr121<I2C> {
     /// Have a look at [note AN3892]() of the mpr121 guidlines.
     pub fn set_thresholds(&mut self, touch: u8, release: u8){
         for i in 0..12{
-            self.write_register(TOUCHTH_0 + 2 * i, touch);
-            self.write_register(RELEASETH_0 + 2 * i, release);
+            //Note ignoring false set thresholds
+            let _ = self.write_register(TOUCHTH_0 + 2 * i, touch);
+            let _ = self.write_register(RELEASETH_0 + 2 * i, release);
         }
     }
 
@@ -104,20 +137,20 @@ impl<I2C: Read + Write> Mpr121<I2C> {
     /// Note that the resulting value is only 10bit wide.
     ///
     /// Note that 0 is returned, if `channel > 12`.
-    pub fn get_filtered(&mut self, channel: u8) -> Result<u16, u16>{
+    pub fn get_filtered(&mut self, channel: u8) -> Result<u16, Mpr121Error>{
         if channel >  12{
-            return Err(0);
+            return Err(Mpr121Error::ChannelExceed);
         }
 
-        self.read_reg16(FILTDATA_0L + channel * 2).map_err(|_| 0)
+        self.read_reg16(FILTDATA_0L + channel * 2)
     }
 
     ///Reads the baseline data for the channel. Note that this has only a resolution of 8bit.
     ///
     /// Note that 0 is returned, if `channel > 12`, or reading failed
-    pub fn get_baseline(&mut self, channel: u8) -> Result<u8, u8>{
+    pub fn get_baseline(&mut self, channel: u8) -> Result<u8, Mpr121Error>{
         if channel > 12{
-            return Err(0);
+            return Err(Mpr121Error::ChannelExceed);
         }
 
         //NOTE: the original reads a 8bit value and left shifts 2bit.
@@ -133,7 +166,7 @@ impl<I2C: Read + Write> Mpr121<I2C> {
         //      6bit, since we loose the 2MSB.
         //
         //      Therefore we read 16bit, mask out the top 6, and then shift
-        let value = self.read_reg16(BASELINE_0 + channel).map_err(|_| 0)? & 0b00000011_11111100;
+        let value = self.read_reg16(BASELINE_0 + channel)? & 0b00000011_11111100;
         let cast = (value << 2).try_into().unwrap_or(0);
         Ok(cast)
     }
@@ -143,9 +176,9 @@ impl<I2C: Read + Write> Mpr121<I2C> {
     /// needed, use [get_touch_state](Self::get_touch_state).
     ///
     /// Returns 0 if reading failed.
-    pub fn get_touched(&mut self) -> Result<u16, u16>{
+    pub fn get_touched(&mut self) -> Result<u16, Mpr121Error>{
         //mask upper four bits returns the rest
-        let unmasked = self.read_reg16(TOUCHSTATUS_L).map_err(|_| 0u16)?;
+        let unmasked = self.read_reg16(TOUCHSTATUS_L)?;
         Ok(unmasked & 0x0fff)
     }
 
@@ -162,7 +195,7 @@ impl<I2C: Read + Write> Mpr121<I2C> {
     }
 
     ///Write implementation. Returns an error if a read or write operation failed. The error contains the failing register.
-    fn write_register(&mut self, reg: u8, value: u8) -> Result<(), u8>{
+    fn write_register(&mut self, reg: u8, value: u8) -> Result<(), Mpr121Error>{
         //MPR121 must be in Stop mode for most reg writes. This is not true for all, but
         // we are conservative here.
         let mut stop_required = true;
@@ -171,38 +204,38 @@ impl<I2C: Read + Write> Mpr121<I2C> {
             stop_required = false;
         }
         //Check in which mode we are by reading ECR.
-        let ecr_state = self.read_reg8(ECR).map_err(|_| ECR)?;
+        let ecr_state = self.read_reg8(ECR)?;
 
         if stop_required{
             //set to stop
-            self.i2c.write(ECR, &[0x00]).map_err(|_| ECR)?;
+            self.i2c.write(ECR, &[0x00]).map_err(|_| Mpr121Error::WriteError(ECR))?;
         }
 
         //actual write
-        self.i2c.write(reg, &[value]).map_err(|_| reg)?;
+        self.i2c.write(reg, &[value]).map_err(|_| Mpr121Error::WriteError(reg))?;
 
         //reset to old ecr state
         if stop_required{
-            self.i2c.write(ECR, &[ecr_state]).map_err(|_| ECR)?;
+            self.i2c.write(ECR, &[ecr_state]).map_err(|_| Mpr121Error::WriteError(ECR))?;
         }
 
         Ok(())
     }
 
     //Reads the value, returns Err, if reading failed.
-    fn read_reg8(&mut self, reg: u8) -> Result<u8, ()>{
+    fn read_reg8(&mut self, reg: u8) -> Result<u8, Mpr121Error>{
         let mut val = [0u8];
         if let Err(_) = self.i2c.read(reg, val.as_mut_slice()){
-            return Err(());
+            return Err(Mpr121Error::ReadError(reg));
         }
         Ok(val[0])
     }
 
     //Reads the value, returns Err, if reading failed.
-    fn read_reg16(&mut self, reg: u8) -> Result<u16, ()>{
+    fn read_reg16(&mut self, reg: u8) -> Result<u16, Mpr121Error>{
         let mut val = [0u8, 0u8];
         if let Err(_) = self.i2c.read(reg, &mut val){
-            return Err(());
+            return Err(Mpr121Error::ReadError(reg));
         }
         Ok(u16::from_be_bytes(val))
     }

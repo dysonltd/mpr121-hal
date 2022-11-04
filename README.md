@@ -3,7 +3,7 @@
 [![crates.io](https://img.shields.io/crates/v/mpr121-hal.svg)](https://crates.io/crates/mpr121-hal)
 [![docs.rs](https://img.shields.io/docsrs/mpr121-hal?style=plastic)](https://docs.rs/mpr121-hal/latest/)
 
-[Mpr121](https://www.nxp.com/docs/en/data-sheet/MPR121.pdf) proximity capacitive touch sensor controller driver. Used for in the [Adafruit Mpr121 module](https://www.adafruit.com/product/1982).
+[Mpr121](https://www.nxp.com/docs/en/data-sheet/MPR121.pdf) proximity capacitive touch sensor controller driver. Used for instance on the [Adafruit Mpr121 module](https://www.adafruit.com/product/1982).
 
 ## Overview
 
