@@ -14,6 +14,8 @@
 #![no_std]
 
 extern crate embedded_hal as hal;
+use core::fmt::Display;
+
 use embedded_hal::blocking::i2c::{Read, Write, WriteRead};
 
 const TOUCHSTATUS_L: u8 = 0x00;
@@ -64,7 +66,10 @@ pub enum Mpr121Error{
     ReadError(u8),
     ///If a write operation failed, contains the address that failed.
     WriteError(u8),
-    Reset
+    ///If sending the reset signal failed
+    ResetFailed,
+    ///If the reset did not happen as expected
+    InitFailed,
 }
 
 ///The four values the sensor can be addressed as. Note that the address of the device is determined by
@@ -92,20 +97,66 @@ impl<I2C: Read + Write> Mpr121<I2C> {
     pub const DEFAULT_RELEASE_THRESOLD: u8 = 6;
 
     ///Creates the driver for the given I²C ports. Assumes that the I²C port is configured as master.
+    /// If `use_auto_config` is set, the controller will use its auto configuration routine to setup
+    /// charging parameters whenever it is transitioned from STOP to START mode.
     ///
-    /// Note that we use the same default values as the Adafruit implementation.
-    pub fn new(i2c: I2C, addr: Mpr121Address) -> Result<Self, Mpr121Error> {
+    /// Note that we use the same default values as the Adafruit implementation, except for threshold values.
+    /// Use [set_thresholds](Self::set_thresholds) to define those.
+    pub fn new(i2c: I2C, addr: Mpr121Address, use_auto_config: bool) -> Result<Self, Mpr121Error> {
         let mut dev = Mpr121 {
             i2c,
             addr,
         };
 
         //reset
-        dev.write_register(SOFTRESET, 0x63)?;
+        dev.write_register(SOFTRESET, 0x63).map_err(|_| Mpr121Error::ResetFailed)?;
+        //Stop
+        dev.write_register(ECR, 0x0)?;
+        //read config register
+        let config = dev.read_reg8(CONFIG2)?;
 
-        //Initialise the device to the same settings as
+        //Check if it is 0x24, which it should be according to the specification.
+        // Otherwise bail.
+        if config != 0x24{
+            return Err(Mpr121Error::InitFailed);
+        }
 
-        
+        //Initialise the device to the similar settings as Adafruit
+        dev.set_thresholds(0x20, 0x15);
+
+        //Setup Filters MHD==MaximumHalfDelta, NHD=NoiseHalfDelta
+        // Have a look at 5.5 in the data sheet for more information.
+        dev.write_register(MHDR, 0x01)?;
+        dev.write_register(NHDR, 0x01)?;
+        dev.write_register(NCLR, 0x0e)?;
+        dev.write_register(FDLR, 0x00)?;
+
+        dev.write_register(MHDF, 0x01)?;
+        dev.write_register(NHDF, 0x05)?;
+        dev.write_register(NCLF, 0x01)?;
+        dev.write_register(FDLF, 0x00)?;
+
+        dev.write_register(NHDT, 0x00)?;
+        dev.write_register(NCLT, 0x00)?;
+        dev.write_register(FDLT, 0x00)?;
+
+        dev.write_register(DEBOUNCE, 0x0)?;
+        dev.write_register(CONFIG1, 0x10)?;
+        dev.write_register(CONFIG2, 0x20)?;
+
+        if use_auto_config{
+            dev.write_register(AUTOCONFIG0, 0x0b)?;
+
+            //Use 3.3V VDD
+            dev.write_register(UPLIMIT, 200)?; // = ((Vdd - 0.7)/Vdd) * 256;
+            dev.write_register(TARGETLIMIT, 180)?; // = UPLIMIT * 0.9
+            dev.write_register(LOWLIMIT, 130)?; // = UPLIMIT * 0.65
+        }
+
+        //enable electrodes and return to start mode
+        let ecr_setting = 0b10000000 + 12; // enable all 12 electrodes
+        dev.write_register(ECR, ecr_setting)?;
+
         Ok(dev)
     }
 
@@ -115,20 +166,29 @@ impl<I2C: Read + Write> Mpr121<I2C> {
     ///
     /// Have a look at [new](Self::new) for further documentation.
     pub fn new_default(i2c: I2C) -> Result<Self, Mpr121Error> {
-        Self::new(i2c, Mpr121Address::Default)
+        Self::new(i2c, Mpr121Address::Default, false)
     }
 
 
-    ///Set the touch and release threshold for all channels. Usually the touch thereshold is a little bigger than the release
-    /// threshold. This creates some debounce chracteristics. The correct thresholds depend on the application.
+    ///Set the touch and release threshold for all channels. Usually the touch threshold is a little bigger than the release
+    /// threshold. This creates some debounce characteristics. The correct thresholds depend on the application.
     ///
-    /// Have a look at [note AN3892]() of the mpr121 guidlines.
+    /// Have a look at [note AN3892]() of the mpr121 guidelines.
     pub fn set_thresholds(&mut self, touch: u8, release: u8){
         for i in 0..12{
             //Note ignoring false set thresholds
             let _ = self.write_register(TOUCHTH_0 + 2 * i, touch);
             let _ = self.write_register(RELEASETH_0 + 2 * i, release);
         }
+    }
+
+    ///Sets the count for both touch and release. See 5.7 of the data sheet.
+    ///
+    /// value must be 0..8, is clamped if it exceeds.
+    pub fn set_debounce(&mut self, debounce_count: u8){
+        let debounce = debounce_count.min(7);
+        let bits = (debounce << 4) | (debounce);
+        let _ = self.write_register(DEBOUNCE, bits);
     }
 
     ///Reads the filtered data form channel t. Noise gets filtered out by the
