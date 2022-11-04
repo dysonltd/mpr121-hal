@@ -79,6 +79,8 @@ pub enum Mpr121Error{
 /// where the `ADDR` pin is connected to. Default is used if no connection, or a connction to `VSS` is made.
 ///
 /// Have a look at page 4 "serial communication" for further specification.
+#[repr(u8)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Mpr121Address{
     Default = 0x5a,
     Vdd = 0x5b,
@@ -87,13 +89,13 @@ pub enum Mpr121Address{
 }
 
 ///Main device definition.
-pub struct Mpr121<I2C: Read + Write> {
+pub struct Mpr121<I2C: Write + WriteRead> {
     i2c: I2C,
     addr: Mpr121Address,
 }
 
 
-impl<I2C: Read + Write> Mpr121<I2C> {
+impl<I2C: Write + WriteRead> Mpr121<I2C> {
 
     pub const DEFAULT_I2CADDR: u8 = 0x5a;
     pub const DEFAULT_TOUCH_THRESHOLD: u8 = 12;
@@ -263,7 +265,7 @@ impl<I2C: Read + Write> Mpr121<I2C> {
         self.get_touched().unwrap_or(0) & (1 << channel) > 0
     }
 
-    ///Write implementation. Returns an error if a read or write operation failed. The error contains the failing register.
+    //Write implementation. Returns an error if a read or write operation failed. The error contains the failing register.
     fn write_register(&mut self, reg: u8, value: u8) -> Result<(), Mpr121Error>{
         //MPR121 must be in Stop mode for most reg writes. This is not true for all, but
         // we are conservative here.
@@ -277,15 +279,15 @@ impl<I2C: Read + Write> Mpr121<I2C> {
 
         if stop_required{
             //set to stop
-            self.i2c.write(ECR, &[0x00]).map_err(|_| Mpr121Error::WriteError(ECR))?;
+            self.i2c.write(self.addr as u8, &[ECR, 0x00]).map_err(|_| Mpr121Error::WriteError(ECR))?;
         }
 
         //actual write
-        self.i2c.write(reg, &[value]).map_err(|_| Mpr121Error::WriteError(reg))?;
+        self.i2c.write(self.addr as u8, &[reg, value]).map_err(|_| Mpr121Error::WriteError(reg))?;
 
         //reset to old ecr state
         if stop_required{
-            self.i2c.write(ECR, &[ecr_state]).map_err(|_| Mpr121Error::WriteError(ECR))?;
+            self.i2c.write(self.addr as u8, &[ECR, ecr_state]).map_err(|_| Mpr121Error::WriteError(ECR))?;
         }
 
         Ok(())
@@ -294,7 +296,7 @@ impl<I2C: Read + Write> Mpr121<I2C> {
     //Reads the value, returns Err, if reading failed.
     fn read_reg8(&mut self, reg: u8) -> Result<u8, Mpr121Error>{
         let mut val = [0u8];
-        if let Err(_) = self.i2c.read(reg, val.as_mut_slice()){
+        if let Err(_) = self.i2c.write_read(self.addr as u8, &[reg], val.as_mut_slice()){
             return Err(Mpr121Error::ReadError(reg));
         }
         Ok(val[0])
@@ -303,7 +305,7 @@ impl<I2C: Read + Write> Mpr121<I2C> {
     //Reads the value, returns Err, if reading failed.
     fn read_reg16(&mut self, reg: u8) -> Result<u16, Mpr121Error>{
         let mut val = [0u8, 0u8];
-        if let Err(_) = self.i2c.read(reg, &mut val){
+        if let Err(_) = self.i2c.write_read(self.addr as u8, &[reg], &mut val){
             return Err(Mpr121Error::ReadError(reg));
         }
         Ok(u16::from_be_bytes(val))
