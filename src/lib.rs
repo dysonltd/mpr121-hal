@@ -87,7 +87,9 @@ pub enum Mpr121Address{
     Scl = 0x5d
 }
 
-///Main device definition.
+///I2C connected Mpr121. Use either [new_default](Self::new_default) or [new](Self::new) to create a new instance.
+///
+/// If you want to collect the I²C bus upon drop, use [free](Self::free), which deconstructs `Self`.
 pub struct Mpr121<I2C: Write + WriteRead> {
     i2c: I2C,
     addr: Mpr121Address,
@@ -131,7 +133,7 @@ impl<I2C: Write + WriteRead> Mpr121<I2C> {
         }
 
         //Initialise the device to the similar settings as Adafruit
-        dev.set_thresholds(0x20, 0x15);
+        dev.set_thresholds(Self::DEFAULT_TOUCH_THRESHOLD, Self::DEFAULT_RELEASE_THRESOLD);
 
         //Setup Filters MHD==MaximumHalfDelta, NHD=NoiseHalfDelta
         // Have a look at 5.5 in the data sheet for more information.
@@ -242,7 +244,7 @@ impl<I2C: Write + WriteRead> Mpr121<I2C> {
 
     ///Reads the *touched* state of all channels. Returns a u16 where each bit 0..12 indicates whether the
     /// pin is touched or not. Use bit shifting / masking to generate a mask, or, if only one sensor's value is
-    /// needed, use [get_touch_state](Self::get_touch_state).
+    /// needed, use [get_touch_state](Self::get_sensor_touch).
     ///
     /// Returns 0 if reading failed.
     pub fn get_touched(&mut self) -> Result<u16, Mpr121Error>{
@@ -307,6 +309,11 @@ impl<I2C: Write + WriteRead> Mpr121<I2C> {
             return Err(Mpr121Error::ReadError(reg));
         }
         Ok(u16::from_le_bytes(val))
+    }
+
+    ///Consumes `self` and releases the i2c bus that is used.
+    pub fn free(self) -> I2C{
+        self.i2c
     }
 }
 
