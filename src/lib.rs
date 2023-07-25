@@ -7,10 +7,7 @@
 //! The chip's data sheet can be found [here](https://www.nxp.com/docs/en/data-sheet/MPR121.pdf). The implementation however mostly mirrors the Adafruit implementation,
 //! since this is probably the most widely used one.
 //!
-#![deny(
-    unsafe_code,
-    warnings
-)]
+#![deny(unsafe_code, warnings)]
 #![no_std]
 
 extern crate embedded_hal as hal;
@@ -58,9 +55,8 @@ const TARGETLIMIT: u8 = 0x7F;
 
 const SOFTRESET: u8 = 0x80;
 
-
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Eq, Ord)]
-pub enum Mpr121Error{
+pub enum Mpr121Error {
     ///If an operation exceeds the channel count (typically 12).
     ChannelExceed,
     ///If a read operation failed, contains the address that failed.
@@ -68,12 +64,10 @@ pub enum Mpr121Error{
     ///If a write operation failed, contains the address that failed.
     WriteError(u8),
     ///If sending the reset signal failed, contains the register that failed.
-    ResetFailed{
-        was_read: bool,
-        reg: u8
-    },
-    ///If the reset did not happen as expected
-    InitFailed,
+    ResetFailed { was_read: bool, reg: u8 },
+    ///If the reset did not happen as expected. if ovcp is set, the reset failed because over-current protection
+    /// is active.
+    InitFailed { over_current_protection: bool },
 }
 
 ///The four values the sensor can be addressed as. Note that the address of the device is determined by
@@ -82,11 +76,11 @@ pub enum Mpr121Error{
 /// Have a look at page 4 "serial communication" for further specification.
 #[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Mpr121Address{
+pub enum Mpr121Address {
     Default = 0x5a,
     Vdd = 0x5b,
     Sda = 0x5c,
-    Scl = 0x5d
+    Scl = 0x5d,
 }
 
 ///Version of the Mpr121 driver that does not occupy the I2C bus. Instead the bus hat to be provided every time
@@ -95,49 +89,74 @@ pub enum Mpr121Address{
 /// # Safety
 ///
 /// Assumes that the supplied I²C bus is always connected to the same mpr121. If you can't guarantee that, consider using the owning [Mpr121](Mpr121) version instead.
-pub struct Mpr121Busless<I2C: Write + WriteRead>{
+pub struct Mpr121Busless<I2C: Write + WriteRead> {
     i2c: PhantomData<I2C>,
     addr: Mpr121Address,
 }
 
 impl<I2C: Write + WriteRead> Mpr121Busless<I2C> {
-
     pub const DEFAULT_TOUCH_THRESHOLD: u8 = 12;
     pub const DEFAULT_RELEASE_THRESOLD: u8 = 6;
 
     ///Creates the driver for the given I²C ports. Assumes that the I²C port is configured as master.
+    ///
     /// If `use_auto_config` is set, the controller will use its auto configuration routine to setup
     /// charging parameters whenever it is transitioned from STOP to START mode.
     ///
+    /// If `check_reset_flags` is set, the reset will be checked by reading back the 0x5C register. Note however, that
+    /// sometime circuit configurations might be too slow/setup-incorrectly for that check. Which is why it is optional.
+    ///
     /// Note that we use the same default values as the Adafruit implementation, except for threshold values.
     /// Use [set_thresholds](Self::set_thresholds) to define those.
-    pub fn new(i2c: &mut I2C, addr: Mpr121Address, use_auto_config: bool) -> Result<Self, Mpr121Error> {
+    pub fn new(
+        i2c: &mut I2C,
+        addr: Mpr121Address,
+        use_auto_config: bool,
+        check_reset_flags: bool,
+    ) -> Result<Self, Mpr121Error> {
         let dev = Mpr121Busless {
             i2c: PhantomData,
             addr,
         };
 
         //reset
-        dev.write_register(i2c, SOFTRESET, 0x63).map_err(
-            |e| match e{
-                Mpr121Error::ReadError(reg) => Mpr121Error::ResetFailed { was_read: true, reg },
-                Mpr121Error::WriteError(reg) => Mpr121Error::ResetFailed{was_read: false, reg },
-                _ => Mpr121Error::ResetFailed{was_read: false, reg: 0xff}
-            }
-        )?;
+        dev.write_register(i2c, SOFTRESET, 0x63)
+            .map_err(|e| match e {
+                Mpr121Error::ReadError(reg) => Mpr121Error::ResetFailed {
+                    was_read: true,
+                    reg,
+                },
+                Mpr121Error::WriteError(reg) => Mpr121Error::ResetFailed {
+                    was_read: false,
+                    reg,
+                },
+                _ => Mpr121Error::ResetFailed {
+                    was_read: false,
+                    reg: 0xff,
+                },
+            })?;
         //Stop
         dev.write_register(i2c, ECR, 0x0)?;
-        //read config register
-        let config = dev.read_reg8(i2c, CONFIG2)?;
 
-        //Check if it is 0x24, which it should be according to the specification.
-        // Otherwise bail.
-        if config != 0x24{
-            return Err(Mpr121Error::InitFailed);
+        if check_reset_flags {
+            //read config register
+            let config = dev.read_reg8(i2c, CONFIG2)?;
+
+            //Check if it is 0x24, which it should be according to the specification.
+            // Otherwise bail.
+            if config != 0x24 {
+                let flags = dev.read_reg8(i2c, 0x01)?;
+                return Err(Mpr121Error::InitFailed {
+                    over_current_protection: (flags & 0x80) > 0,
+                });
+            }
         }
-
         //Initialise the device to the similar settings as Adafruit
-        dev.set_thresholds(i2c, Self::DEFAULT_TOUCH_THRESHOLD, Self::DEFAULT_RELEASE_THRESOLD);
+        dev.set_thresholds(
+            i2c,
+            Self::DEFAULT_TOUCH_THRESHOLD,
+            Self::DEFAULT_RELEASE_THRESOLD,
+        );
 
         //Setup Filters MHD==MaximumHalfDelta, NHD=NoiseHalfDelta
         // Have a look at 5.5 in the data sheet for more information.
@@ -159,7 +178,7 @@ impl<I2C: Write + WriteRead> Mpr121Busless<I2C> {
         dev.write_register(i2c, CONFIG1, 0x10)?;
         dev.write_register(i2c, CONFIG2, 0x20)?;
 
-        if use_auto_config{
+        if use_auto_config {
             dev.write_register(i2c, AUTOCONFIG0, 0x0b)?;
 
             //Use 3.3V VDD
@@ -181,16 +200,23 @@ impl<I2C: Write + WriteRead> Mpr121Busless<I2C> {
     ///
     /// Have a look at [new](Self::new) for further documentation.
     pub fn new_default(i2c: &mut I2C) -> Result<Self, Mpr121Error> {
-        Self::new(i2c, Mpr121Address::Default, false)
+        Self::new(i2c, Mpr121Address::Default, false, true)
     }
 
+    ///Returns true if over-current is detected by the device. In that case you probably have to check you
+    /// circuit.
+    pub fn over_current_set(&self, i2c: &mut I2C) -> Result<bool, Mpr121Error> {
+        let read = self.read_reg8(i2c, 0x01)?;
+        //If bit D7 is set, we have OVCF
+        Ok((read & (0b10000000)) > 0)
+    }
 
     ///Set the touch and release threshold for all channels. Usually the touch threshold is a little bigger than the release
     /// threshold. This creates some debounce characteristics. The correct thresholds depend on the application.
     ///
     /// Have a look at [note AN3892]() of the mpr121 guidelines.
-    pub fn set_thresholds(&self, i2c: &mut I2C, touch: u8, release: u8){
-        for i in 0..12{
+    pub fn set_thresholds(&self, i2c: &mut I2C, touch: u8, release: u8) {
+        for i in 0..12 {
             //Note ignoring false set thresholds
             let _ = self.write_register(i2c, TOUCHTH_0 + 2 * i, touch);
             let _ = self.write_register(i2c, RELEASETH_0 + 2 * i, release);
@@ -200,7 +226,7 @@ impl<I2C: Write + WriteRead> Mpr121Busless<I2C> {
     ///Sets the count for both touch and release. See 5.7 of the data sheet.
     ///
     /// value must be 0..8, is clamped if it exceeds.
-    pub fn set_debounce(&self, i2c: &mut I2C, debounce_count: u8){
+    pub fn set_debounce(&self, i2c: &mut I2C, debounce_count: u8) {
         let debounce = debounce_count.min(7);
         let bits = (debounce << 4) | (debounce);
         let _ = self.write_register(i2c, DEBOUNCE, bits);
@@ -212,8 +238,8 @@ impl<I2C: Write + WriteRead> Mpr121Busless<I2C> {
     /// Note that the resulting value is only 10bit wide.
     ///
     /// Note that 0 is returned, if `channel > 12`.
-    pub fn get_filtered(&self, i2c: &mut I2C, channel: u8) -> Result<u16, Mpr121Error>{
-        if channel >  12{
+    pub fn get_filtered(&self, i2c: &mut I2C, channel: u8) -> Result<u16, Mpr121Error> {
+        if channel > 12 {
             return Err(Mpr121Error::ChannelExceed);
         }
 
@@ -223,8 +249,8 @@ impl<I2C: Write + WriteRead> Mpr121Busless<I2C> {
     ///Reads the baseline data for the channel. Note that this has only a resolution of 8bit.
     ///
     /// Note that 0 is returned, if `channel > 12`, or reading failed
-    pub fn get_baseline(&self, i2c: &mut I2C, channel: u8) -> Result<u8, Mpr121Error>{
-        if channel > 12{
+    pub fn get_baseline(&self, i2c: &mut I2C, channel: u8) -> Result<u8, Mpr121Error> {
+        if channel > 12 {
             return Err(Mpr121Error::ChannelExceed);
         }
 
@@ -251,7 +277,7 @@ impl<I2C: Write + WriteRead> Mpr121Busless<I2C> {
     /// needed, use [get_touch_state](Self::get_sensor_touch).
     ///
     /// Returns 0 if reading failed.
-    pub fn get_touched(&self, i2c: &mut I2C) -> Result<u16, Mpr121Error>{
+    pub fn get_touched(&self, i2c: &mut I2C) -> Result<u16, Mpr121Error> {
         //mask upper four bits returns the rest
         let unmasked = self.read_reg16(i2c, TOUCHSTATUS_L)?;
         Ok(unmasked & 0x0fff)
@@ -260,8 +286,8 @@ impl<I2C: Write + WriteRead> Mpr121Busless<I2C> {
     ///Returns the touch state of the given sensor.
     ///
     /// Returns false if `channel>11`, or reading failed.
-    pub fn get_sensor_touch(&self, i2c: &mut I2C, channel: u8) -> bool{
-        if channel>11{
+    pub fn get_sensor_touch(&self, i2c: &mut I2C, channel: u8) -> bool {
+        if channel > 11 {
             return false;
         }
 
@@ -270,53 +296,53 @@ impl<I2C: Write + WriteRead> Mpr121Busless<I2C> {
     }
 
     //Write implementation. Returns an error if a read or write operation failed. The error contains the failing register.
-    fn write_register(&self, i2c: &mut I2C, reg: u8, value: u8) -> Result<(), Mpr121Error>{
+    fn write_register(&self, i2c: &mut I2C, reg: u8, value: u8) -> Result<(), Mpr121Error> {
         //MPR121 must be in Stop mode for most reg writes. This is not true for all, but
         // we are conservative here.
         let mut stop_required = true;
         //ECR and 0x73..0x71 don't need stop. makes this a bit faster
-        if reg == ECR || (0x73 <= reg && reg <= 0x7a){
+        if reg == ECR || (0x73 <= reg && reg <= 0x7a) {
             stop_required = false;
         }
         //Check in which mode we are by reading ECR.
         let ecr_state = self.read_reg8(i2c, ECR)?;
 
-        if stop_required{
+        if stop_required {
             //set to stop
-            i2c.write(self.addr as u8, &[ECR, 0x00]).map_err(|_| Mpr121Error::WriteError(ECR))?;
+            i2c.write(self.addr as u8, &[ECR, 0x00])
+                .map_err(|_| Mpr121Error::WriteError(ECR))?;
         }
 
         //actual write
-        i2c.write(self.addr as u8, &[reg, value]).map_err(|_| Mpr121Error::WriteError(reg))?;
+        i2c.write(self.addr as u8, &[reg, value])
+            .map_err(|_| Mpr121Error::WriteError(reg))?;
 
         //reset to old ecr state
-        if stop_required{
-            i2c.write(self.addr as u8, &[ECR, ecr_state]).map_err(|_| Mpr121Error::WriteError(ECR))?;
+        if stop_required {
+            i2c.write(self.addr as u8, &[ECR, ecr_state])
+                .map_err(|_| Mpr121Error::WriteError(ECR))?;
         }
 
         Ok(())
     }
     //Reads the value, returns Err, if reading failed.
-    fn read_reg8(&self, i2c: &mut I2C, reg: u8) -> Result<u8, Mpr121Error>{
+    fn read_reg8(&self, i2c: &mut I2C, reg: u8) -> Result<u8, Mpr121Error> {
         let mut val = [0u8];
-        if let Err(_) = i2c.write_read(self.addr as u8, &[reg], val.as_mut_slice()){
+        if let Err(_) = i2c.write_read(self.addr as u8, &[reg], val.as_mut_slice()) {
             return Err(Mpr121Error::ReadError(reg));
         }
         Ok(val[0])
     }
 
     //Reads the value, returns Err, if reading failed.
-    fn read_reg16(&self, i2c: &mut I2C, reg: u8) -> Result<u16, Mpr121Error>{
+    fn read_reg16(&self, i2c: &mut I2C, reg: u8) -> Result<u16, Mpr121Error> {
         let mut val = [0u8, 0u8];
-        if let Err(_) = i2c.write_read(self.addr as u8, &[reg], &mut val){
+        if let Err(_) = i2c.write_read(self.addr as u8, &[reg], &mut val) {
             return Err(Mpr121Error::ReadError(reg));
         }
         Ok(u16::from_le_bytes(val))
     }
-
 }
-
-
 
 ///I2C connected Mpr121. Use either [new_default](Self::new_default) or [new](Self::new) to create a new instance.
 ///
@@ -326,20 +352,21 @@ pub struct Mpr121<I2C: Write + WriteRead> {
     busless: Mpr121Busless<I2C>,
 }
 
-impl<I2C: Write + WriteRead> Mpr121<I2C>{
-
+impl<I2C: Write + WriteRead> Mpr121<I2C> {
     ///Creates the driver for the given I²C ports. Assumes that the I²C port is configured as master.
     /// If `use_auto_config` is set, the controller will use its auto configuration routine to setup
     /// charging parameters whenever it is transitioned from STOP to START mode.
     ///
     /// Note that we use the same default values as the Adafruit implementation, except for threshold values.
     /// Use [set_thresholds](Self::set_thresholds) to define those.
-    pub fn new(mut i2c: I2C, addr: Mpr121Address, use_auto_config: bool) -> Result<Self, Mpr121Error> {
-        let busless = Mpr121Busless::new(&mut i2c, addr, use_auto_config)?;
-        Ok(Mpr121 {
-            i2c,
-            busless,
-        })
+    pub fn new(
+        mut i2c: I2C,
+        addr: Mpr121Address,
+        use_auto_config: bool,
+        check_reset_flags: bool,
+    ) -> Result<Self, Mpr121Error> {
+        let busless = Mpr121Busless::new(&mut i2c, addr, use_auto_config, check_reset_flags)?;
+        Ok(Mpr121 { i2c, busless })
     }
 
     ///Initializes the driver assuming the sensors address is the default one (0x5a).
@@ -348,22 +375,21 @@ impl<I2C: Write + WriteRead> Mpr121<I2C>{
     ///
     /// Have a look at [new](Self::new) for further documentation.
     pub fn new_default(i2c: I2C) -> Result<Self, Mpr121Error> {
-        Self::new(i2c, Mpr121Address::Default, false)
+        Self::new(i2c, Mpr121Address::Default, false, true)
     }
-
 
     ///Set the touch and release threshold for all channels. Usually the touch threshold is a little bigger than the release
     /// threshold. This creates some debounce characteristics. The correct thresholds depend on the application.
     ///
     /// Have a look at [note AN3892]() of the mpr121 guidelines.
-    pub fn set_thresholds(&mut self, touch: u8, release: u8){
+    pub fn set_thresholds(&mut self, touch: u8, release: u8) {
         self.busless.set_thresholds(&mut self.i2c, touch, release)
     }
 
     ///Sets the count for both touch and release. See 5.7 of the data sheet.
     ///
     /// value must be 0..8, is clamped if it exceeds.
-    pub fn set_debounce(&mut self, debounce_count: u8){
+    pub fn set_debounce(&mut self, debounce_count: u8) {
         self.busless.set_debounce(&mut self.i2c, debounce_count)
     }
 
@@ -373,14 +399,14 @@ impl<I2C: Write + WriteRead> Mpr121<I2C>{
     /// Note that the resulting value is only 10bit wide.
     ///
     /// Note that 0 is returned, if `channel > 12`.
-    pub fn get_filtered(&mut self, channel: u8) -> Result<u16, Mpr121Error>{
+    pub fn get_filtered(&mut self, channel: u8) -> Result<u16, Mpr121Error> {
         self.busless.get_filtered(&mut self.i2c, channel)
     }
 
     ///Reads the baseline data for the channel. Note that this has only a resolution of 8bit.
     ///
     /// Note that 0 is returned, if `channel > 12`, or reading failed
-    pub fn get_baseline(&mut self, channel: u8) -> Result<u8, Mpr121Error>{
+    pub fn get_baseline(&mut self, channel: u8) -> Result<u8, Mpr121Error> {
         self.busless.get_baseline(&mut self.i2c, channel)
     }
 
@@ -389,20 +415,19 @@ impl<I2C: Write + WriteRead> Mpr121<I2C>{
     /// needed, use [get_touch_state](Self::get_sensor_touch).
     ///
     /// Returns 0 if reading failed.
-    pub fn get_touched(&mut self) -> Result<u16, Mpr121Error>{
+    pub fn get_touched(&mut self) -> Result<u16, Mpr121Error> {
         self.busless.get_touched(&mut self.i2c)
     }
 
     ///Returns the touch state of the given sensor.
     ///
     /// Returns false if `channel>11`, or reading failed.
-    pub fn get_sensor_touch(&mut self, channel: u8) -> bool{
+    pub fn get_sensor_touch(&mut self, channel: u8) -> bool {
         self.busless.get_sensor_touch(&mut self.i2c, channel)
     }
 
-
     ///Consumes `self` and releases the i2c bus that is used.
-    pub fn free(self) -> I2C{
+    pub fn free(self) -> I2C {
         self.i2c
     }
 }
