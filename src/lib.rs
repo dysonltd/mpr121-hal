@@ -14,7 +14,7 @@ extern crate embedded_hal as hal;
 
 use core::marker::PhantomData;
 
-use embedded_hal::blocking::i2c::{Write, WriteRead};
+use embedded_hal::i2c::I2c;
 
 const TOUCHSTATUS_L: u8 = 0x00;
 //const TOUCHSTATUS_H: u8 = 0x01;
@@ -89,12 +89,12 @@ pub enum Mpr121Address {
 /// # Safety
 ///
 /// Assumes that the supplied I²C bus is always connected to the same mpr121. If you can't guarantee that, consider using the owning [Mpr121](Mpr121) version instead.
-pub struct Mpr121Busless<I2C: Write + WriteRead> {
+pub struct Mpr121Busless<I2C: I2c> {
     i2c: PhantomData<I2C>,
     addr: Mpr121Address,
 }
 
-impl<I2C: Write + WriteRead> Mpr121Busless<I2C> {
+impl<I2C: I2c> Mpr121Busless<I2C> {
     pub const DEFAULT_TOUCH_THRESHOLD: u8 = 12;
     pub const DEFAULT_RELEASE_THRESOLD: u8 = 6;
 
@@ -347,12 +347,12 @@ impl<I2C: Write + WriteRead> Mpr121Busless<I2C> {
 ///I2C connected Mpr121. Use either [new_default](Self::new_default) or [new](Self::new) to create a new instance.
 ///
 /// If you want to collect the I²C bus upon drop, use [free](Self::free), which deconstructs `Self`.
-pub struct Mpr121<I2C: Write + WriteRead> {
+pub struct Mpr121<I2C: I2c> {
     i2c: I2C,
     busless: Mpr121Busless<I2C>,
 }
 
-impl<I2C: Write + WriteRead> Mpr121<I2C> {
+impl<I2C: I2c> Mpr121<I2C> {
     ///Creates the driver for the given I²C ports. Assumes that the I²C port is configured as master.
     /// If `use_auto_config` is set, the controller will use its auto configuration routine to setup
     /// charging parameters whenever it is transitioned from STOP to START mode.
