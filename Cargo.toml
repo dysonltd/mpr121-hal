@@ -1,13 +1,19 @@
 [package]
 name = "mpr121-hal"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 authors = ["Tendsin Mende <tendsin@protonmail.com>"]
 repository = "https://gitlab.com/tendsinmende/mpr121-hal"
 license = "MIT OR Apache-2.0"
 description = "MPR121 proximity capacitive touch sensor controller hal driver implementation."
 readme = "README.md"
-keywords = ["sensor", "capacitive", "embedded-hal-driver", "embedded-hal", "hal"]
+keywords = [
+    "sensor",
+    "capacitive",
+    "embedded-hal-driver",
+    "embedded-hal",
+    "hal",
+]
 categories = ["embedded", "hardware-support", "no-std"]
 homepage = "https://gitlab.com/tendsinmende/mpr121-hal"
 documentation = "https://docs.rs/mpr121-hal/latest/"
