@@ -1,5 +1,5 @@
 pub const TOUCHSTATUS_L: u8 = 0x00;
-// pub const TOUCHSTATUS_H: u8 = 0x01;
+pub const TOUCHSTATUS_H: u8 = 0x01;
 pub const FILTDATA_0L: u8 = 0x04;
 //pub const FILTDATA_0H: u8 = 0x05;
 pub const BASELINE_0: u8 = 0x1E;
