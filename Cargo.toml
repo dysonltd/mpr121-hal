@@ -31,8 +31,8 @@ include = [
 default = ["sync"]
 
 # Embedded Hal Features
-sync = ["embedded-hal", "maybe-async/is_sync"]
-async = ["embedded-hal-async"]
+sync = ["dep:embedded-hal", "maybe-async/is_sync"]
+async = ["dep:embedded-hal-async"]
 
 [dependencies]
 # Embedded HAL traits
