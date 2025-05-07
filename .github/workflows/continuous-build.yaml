@@ -9,7 +9,7 @@ on:
  # Required for Extensa Toolchain
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
+
 jobs:
   Core_Library_Sync:
     name: Library (Sync)
@@ -46,6 +46,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
+      - uses: actions/checkout@v4
       - name: Install Rust for Xtensa
         uses: esp-rs/xtensa-toolchain@v1.5
         with:
@@ -54,7 +55,6 @@ jobs:
       - name: Building ESP32 Example
         run: |
           echo "Building ESP32 Example"
-          ls
           echo "current folder: $(pwd)"
           cd examples/esp32s3
           source "$HOME"/.cargo/env
