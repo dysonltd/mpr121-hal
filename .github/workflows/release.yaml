@@ -1,5 +1,5 @@
+---
 name: MPR121-HAL Release
-
 on:
   push:
     tags:
