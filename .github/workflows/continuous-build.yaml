@@ -46,7 +46,7 @@ jobs:
       - name: Building ESP32 Example
         run: |
           echo "Building ESP32 Example"
-          cd examples/esp32
+          cd examples/esp32s3
           source "$HOME"/.cargo/env
           cargo build
 
