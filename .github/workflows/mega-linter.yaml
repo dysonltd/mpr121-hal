@@ -176,6 +176,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Install Toolchain
+        run: |
+          echo "Installing Toolchain"
+          cargo install espup
+          . $HOME/export-esp.sh
       - name: Clippy check on esp32 example
         run: |
           cd examples/esp32s3
