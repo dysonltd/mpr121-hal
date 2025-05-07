@@ -6,7 +6,7 @@ on:
       - main
   workflow_call:
 
- # Required for Extensa Toolchain
+  # Required for Extensa Toolchain
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
