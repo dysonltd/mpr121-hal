@@ -42,7 +42,11 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - name: Install Toolchain
+        run: |
+          echo "Installing Toolchain"
+          cargo install espup
+          . $HOME/export-esp.sh
       - name: Building ESP32 Example
         run: |
           echo "Building ESP32 Example"
