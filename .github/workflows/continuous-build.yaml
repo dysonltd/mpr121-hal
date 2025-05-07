@@ -42,12 +42,11 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
-      - name: Install Toolchain
-        run: |
-          echo "Installing Toolchain"
-          cargo install espup
-          espup install
-          . $HOME/export-esp.sh
+      - name: Install Rust for Xtensa
+        uses: esp-rs/xtensa-toolchain@v1.5
+        with:
+          default: true
+          ldproxy: true
       - name: Building ESP32 Example
         run: |
           echo "Building ESP32 Example"

@@ -176,12 +176,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Install Toolchain
-        run: |
-          echo "Installing Toolchain"
-          cargo install espup
-          espup install
-          . $HOME/export-esp.sh
+      - name: Install Rust for Xtensa
+        uses: esp-rs/xtensa-toolchain@v1.5
+        with:
+          default: true
+          ldproxy: true
       - name: Clippy check on esp32 example
         run: |
           cd examples/esp32s3
