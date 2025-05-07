@@ -1,6 +1,8 @@
 # MPR121-hal
 
+<!-- markdown-link-check-disable -->
 [![crates.io](https://img.shields.io/crates/v/mpr121-hal.svg)](https://crates.io/crates/mpr121-hal)
+<!-- markdown-link-check-enable -->
 [![docs.rs](https://img.shields.io/docsrs/mpr121-hal?style=plastic)](https://docs.rs/mpr121-hal/latest/)
 [![dependency status](https://deps.rs/repo/gitlab/tendsinmende/mpr121-hal/status.svg)](https://deps.rs/repo/gitlab/tendsinmende/mpr121-hal)
 
@@ -8,11 +10,12 @@
 Used for instance on the [Adafruit Mpr121 module](https://www.adafruit.com/product/1982).
 
 ## Overview
-
+<!-- markdown-link-check-disable -->
 The crate uses the [embeded-hal](https://crates.io/crates/embedded-hal) crate to provided a generic implementation for multiple HALs alongside [embedded-hal-async](https://crates.io/crates/embedded-hal-async) for async support.
 It uses [maybe-async](https://crates.io/crates/maybe-async) to provide a single API for both sync and async implementations.
 Simply use either the `sync` or `async` feature to enable the desired implementation.
 If both features are enabled cargo will fail to compile the project.
+<!-- markdown-link-check-enable -->
 
 The implementation provides a similar API to the C++ Adafruit library.
 It should work with similar boards using the Mpr121 as well.
