@@ -47,25 +47,25 @@ jobs:
           source "$HOME"/.cargo/env
           cargo build
 
-    OS_Sync_Example:
-      name: OS Sync Example
-      runs-on: ${{ matrix.os }}
-      strategy:
-        matrix:
-          os: [ubuntu-latest, macos-latest]
-      steps:
-        - uses: actions/checkout@v4
-        - name: Install FTDI Dependencies (Linux)
-          if: runner.os == 'Linux'
-          run: |
-            sudo apt-get install libftdi1 libftdi1-dev -y
-        - name: Install FTDI Dependencies (MacOS)
-          if: runner.os == 'MacOS'
-          run: |
-            brew install libftdi
-        - name: Building OS Sync Example
-          run: |
-            echo "Building OS Sync Example"
-            cd examples
-            source "$HOME"/.cargo/env
-            cargo build --example os_sync_basic
+  OS_Sync_Example:
+    name: OS Sync Example
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install FTDI Dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install libftdi1 libftdi1-dev -y
+      - name: Install FTDI Dependencies (MacOS)
+        if: runner.os == 'MacOS'
+        run: |
+          brew install libftdi
+      - name: Building OS Sync Example
+        run: |
+          echo "Building OS Sync Example"
+          cd examples
+          source "$HOME"/.cargo/env
+          cargo build --example os_sync_basic

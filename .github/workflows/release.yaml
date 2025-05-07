@@ -16,7 +16,6 @@ jobs:
       issues: write
       pull-requests: write
       statuses: write
-
   build:
     uses: ./.github/workflows/continuous-build.yaml
 
@@ -38,18 +37,13 @@ jobs:
             exit 1  # Exits with a non-zero status to fail the workflow
           fi
         shell: bash
-
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-      - name: Ensure Build Passes
-        workflow_call:
-          name: Continuous Build
       - name: Build project
         run: |
           cargo build --release
-
       - name: Create GitHub release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
