@@ -46,6 +46,7 @@ jobs:
         run: |
           echo "Installing Toolchain"
           cargo install espup
+          espup install
           . $HOME/export-esp.sh
       - name: Building ESP32 Example
         run: |
