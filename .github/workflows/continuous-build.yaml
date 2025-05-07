@@ -6,6 +6,10 @@ on:
       - main
   workflow_call:
 
+ # Required for Extensa Toolchain
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
 jobs:
   Core_Library_Sync:
     name: Library (Sync)
