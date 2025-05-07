@@ -8,9 +8,21 @@ on:
 permissions:
   contents: write
 
+jobs:
+  linting:
+    uses: ./.github/workflows/mega-linter.yaml
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      statuses: write
+
+  build:
+    uses: ./.github/workflows/continuous-build.yaml
+
   release:
     name: Publish MPR121 HAL
-    needs: build
+    needs: [linting, build]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: github.ref == 'refs/heads/main'
@@ -31,7 +43,9 @@ permissions:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
-
+      - name: Ensure Build Passes
+        workflow_call:
+          name: Continuous Build
       - name: Build project
         run: |
           cargo build --release
