@@ -10,6 +10,8 @@
 #![deny(unsafe_code, warnings)]
 #![no_std]
 
+use num_enum::IntoPrimitive;
+
 mod communications;
 pub mod mpr121;
 mod registers;
@@ -40,7 +42,7 @@ pub enum Mpr121Error {
 ///
 /// Have a look at page 4 "serial communication" for further specification.
 #[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive)]
 pub enum Mpr121Address {
     Default = 0x5a,
     Vdd = 0x5b,

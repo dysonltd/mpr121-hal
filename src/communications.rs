@@ -12,27 +12,29 @@ impl<I2C: I2c> Mpr121<I2C> {
         //MPR121 must be in Stop mode for most reg writes. This is not true for all, but
         // we are conservative here.
         let mut stop_required = true;
+        let ecr_register = Registers::Ecr.into();
+        let addr = self.addr.into();
         //ECR and 0x73..0x71 don't need stop. makes this a bit faster
-        if reg == ECR || (0x73..=0x7a).contains(&reg) {
+        if reg == ecr_register || (0x73..=0x7a).contains(&reg) {
             stop_required = false;
         }
         //Check in which mode we are by reading ECR.
-        let ecr_state = self.read_reg8(ECR).await?;
+        let ecr_state = self.read_reg8(ecr_register).await?;
 
         if stop_required {
             //set to stop
-            let result = self.i2c.write(self.addr as u8, &[ECR, 0x00]).await;
-            result.map_err(|_| Mpr121Error::WriteError(ECR))?;
+            let result = self.i2c.write(addr, &[ecr_register, 0x00]).await;
+            result.map_err(|_| Mpr121Error::WriteError(ecr_register))?;
         }
 
         //actual write
-        let result = self.i2c.write(self.addr as u8, &[reg, value]).await;
+        let result = self.i2c.write(addr, &[reg, value]).await;
         result.map_err(|_| Mpr121Error::WriteError(reg))?;
 
         //reset to old ecr state
         if stop_required {
-            let result = self.i2c.write(self.addr as u8, &[ECR, ecr_state]).await;
-            result.map_err(|_| Mpr121Error::WriteError(ECR))?;
+            let result = self.i2c.write(addr, &[ecr_register, ecr_state]).await;
+            result.map_err(|_| Mpr121Error::WriteError(ecr_register))?;
         }
 
         Ok(())
@@ -42,7 +44,10 @@ impl<I2C: I2c> Mpr121<I2C> {
     //Reads the value, returns Err, if reading failed.
     pub(crate) async fn read_reg8(&mut self, reg: u8) -> Result<u8, Mpr121Error> {
         let mut val = [0u8];
-        let result = self.i2c.write_read(self.addr as u8, &[reg], &mut val).await;
+        let result = self
+            .i2c
+            .write_read(self.addr.into(), &[reg], &mut val)
+            .await;
         if result.is_err() {
             return Err(Mpr121Error::ReadError(reg));
         }
@@ -53,7 +58,10 @@ impl<I2C: I2c> Mpr121<I2C> {
     //Reads the value, returns Err, if reading failed.
     pub(crate) async fn read_reg16(&mut self, reg: u8) -> Result<u16, Mpr121Error> {
         let mut val = [0u8, 0u8];
-        let result = self.i2c.write_read(self.addr as u8, &[reg], &mut val).await;
+        let result = self
+            .i2c
+            .write_read(self.addr.into(), &[reg], &mut val)
+            .await;
         if result.is_err() {
             return Err(Mpr121Error::ReadError(reg));
         }
