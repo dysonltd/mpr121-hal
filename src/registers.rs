@@ -1,6 +1,6 @@
 use num_enum::IntoPrimitive;
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, Eq, PartialEq, IntoPrimitive)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, IntoPrimitive, PartialOrd, Ord)]
 pub enum Registers {
     TouchStatusL = 0x00,
     TouchStatusH = 0x01,

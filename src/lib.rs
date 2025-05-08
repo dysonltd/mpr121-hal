@@ -11,6 +11,7 @@
 #![no_std]
 
 use num_enum::IntoPrimitive;
+use registers::Registers;
 
 mod communications;
 pub mod mpr121;
@@ -27,11 +28,11 @@ pub enum Mpr121Error {
     ///If an operation exceeds the channel count (typically 12).
     ChannelExceed,
     ///If a read operation failed, contains the address that failed.
-    ReadError(u8),
+    ReadError(Registers),
     ///If a write operation failed, contains the address that failed.
-    WriteError(u8),
+    WriteError(Registers),
     ///If sending the reset signal failed, contains the register that failed.
-    ResetFailed { was_read: bool, reg: u8 },
+    ResetFailed { was_read: bool, reg: Registers },
     ///If the reset did not happen as expected. if ovcp is set, the reset failed because over-current protection
     /// is active.
     InitFailed { over_current_protection: bool },

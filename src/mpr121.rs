@@ -31,10 +31,7 @@ impl<I2C: I2c> Mpr121<I2C> {
     ) -> Result<Self, Mpr121Error> {
         let mut dev = Mpr121 { i2c, addr };
         //reset
-        let error = dev
-            .write_register(Registers::SoftReset.into(), 0x63)
-            .await
-            .err();
+        let error = dev.write_register(Registers::SoftReset, 0x63).await.err();
         error.map(|e| match e {
             Mpr121Error::ReadError(reg) => Mpr121Error::ResetFailed {
                 was_read: true,
