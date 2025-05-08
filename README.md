@@ -1,6 +1,8 @@
 # MPR121-hal
 
+<!-- markdown-link-check-disable -->
 [![crates.io](https://img.shields.io/crates/v/mpr121-hal.svg)](https://crates.io/crates/mpr121-hal)
+<!-- markdown-link-check-enable -->
 [![docs.rs](https://img.shields.io/docsrs/mpr121-hal?style=plastic)](https://docs.rs/mpr121-hal/latest/)
 [![dependency status](https://deps.rs/repo/gitlab/tendsinmende/mpr121-hal/status.svg)](https://deps.rs/repo/gitlab/tendsinmende/mpr121-hal)
 
@@ -8,11 +10,12 @@
 Used for instance on the [Adafruit Mpr121 module](https://www.adafruit.com/product/1982).
 
 ## Overview
-
+<!-- markdown-link-check-disable -->
 The crate uses the [embeded-hal](https://crates.io/crates/embedded-hal) crate to provided a generic implementation for multiple HALs alongside [embedded-hal-async](https://crates.io/crates/embedded-hal-async) for async support.
 It uses [maybe-async](https://crates.io/crates/maybe-async) to provide a single API for both sync and async implementations.
 Simply use either the `sync` or `async` feature to enable the desired implementation.
 If both features are enabled cargo will fail to compile the project.
+<!-- markdown-link-check-enable -->
 
 The implementation provides a similar API to the C++ Adafruit library.
 It should work with similar boards using the Mpr121 as well.
@@ -46,6 +49,20 @@ cargo run --example os_sync_basic --no-default-features --features sync
 ```
 
 More information on this can be found [here](https://github.com/dysonltd/tmag5273/blob/main/examples/README.md).
+## Running your Linter Locally
+This project uses [MegaLinter](https://github.com/oxsecurity/megalinter) which provides linters for various different file formats and languages. When a Pull request to main is done, the linters will run and ensure the codebase is in good standing. It is recommended that you run the linter locally beforehand as it can sometimes autofix common mistakes.
+
+```bash
+npx mega-linter-runner
+```
+
+You will need to have docker and Node installed to use this, more information can be found on their [repo](https://github.com/oxsecurity/megalinter)
+### Issues with rust fmt
+Currently at the time of this commit `rust fmt` is not supported as part of MegaLinter, thus to ensure it is correctly formatted we have added an extra build stage which can be seen [here](./.github/workflows/mega-linter.yaml). You can run this locally using
+
+```bash
+cargo fmt --all
+```
 
 ## License
 
