@@ -22,4 +22,4 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 - [ ] I have commented my code, particularly in hard-to-understand areas
 - [ ] I have made corresponding changes to the documentation
 - [ ] My changes generate no new warnings
-- [ ] I Have locally ran [MegaLinter](https://megalinter.io/latest/supported-linters/) see [README](../README.md) for more details Command: `npx mega-linter-runner --fix`
+- [ ] I Have locally ran [MegaLinter](https://megalinter.io/latest/supported-linters/) see [README](../README.md) for more details. You can use the following Bash/zsh command: `npx mega-linter-runner --fix`
