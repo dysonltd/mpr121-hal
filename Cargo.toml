@@ -2,7 +2,7 @@
 name = "mpr121-hal"
 version = "0.5.0"
 edition = "2021"
-authors = ["Tendsin Mende <tendsin@protonmail.com>"]
+authors = ["Tendsin Mende <tendsin@protonmail.com>", "Scott Gibb <smgibb@yahoo.com"]
 repository = "https://gitlab.com/tendsinmende/mpr121-hal"
 license = "MIT OR Apache-2.0"
 description = "MPR121 proximity capacitive touch sensor controller hal driver implementation."
