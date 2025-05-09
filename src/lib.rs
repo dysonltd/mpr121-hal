@@ -74,7 +74,7 @@ pub const NUM_TOUCH_CHANNELS: u8 = 12;
 
 impl Channel {
     pub fn get_mask(self) -> u16 {
-        return 1 << u8::from(self);
+        1 << u8::from(self)
     }
 }
 
