@@ -3,7 +3,7 @@ use embedded_hal::i2c::I2c;
 #[cfg(feature = "async")]
 use embedded_hal_async::i2c::I2c;
 
-use crate::{registers::*, Channel, NUM_TOUCH_CHANNELS};
+use crate::{registers::*, Channel, DebounceNumber, NUM_TOUCH_CHANNELS};
 use crate::{Mpr121Address, Mpr121Error};
 
 pub struct Mpr121<I2C: I2c> {
@@ -119,7 +119,6 @@ impl<I2C: I2c> Mpr121<I2C> {
     #[maybe_async::maybe_async]
     pub async fn new_default(i2c: I2C) -> Result<Self, Mpr121Error> {
         let result = Self::new(i2c, Mpr121Address::Default, false, true).await?;
-
         Ok(result)
     }
 
@@ -156,9 +155,12 @@ impl<I2C: I2c> Mpr121<I2C> {
     ///
     /// value must be 0..8, is clamped if it exceeds.
     #[maybe_async::maybe_async]
-    pub async fn set_debounce(&mut self, debounce_count: u8) -> Result<(), Mpr121Error> {
-        let debounce = debounce_count.min(7);
-        let bits = (debounce << 4) | (debounce);
+    pub async fn set_debounce(
+        &mut self,
+        debounce_count: DebounceNumber,
+    ) -> Result<(), Mpr121Error> {
+        let debounce: u8 = debounce_count.into();
+        let bits = (debounce << 4) | (debounce); // TODO: Tidy This up
         self.write_register(Register::Debounce, bits).await?;
 
         Ok(())
@@ -218,11 +220,10 @@ impl<I2C: I2c> Mpr121<I2C> {
 
     ///Returns the touch state of the given sensor.
     ///
-    /// Returns false if `channel>11`, or reading failed.
     #[maybe_async::maybe_async]
-    pub async fn get_sensor_touch(&mut self, channel: Channel) -> bool {
+    pub async fn get_sensor_touch(&mut self, channel: Channel) -> Result<bool, Mpr121Error> {
         //Masks all bits except for our channel, then returns true if the bit is set
-        let result = self.get_touched().await;
-        result.unwrap_or(0) & (1 << channel as u8) > 0
+        let result = self.get_touched().await?;
+        return Ok(result & (1 << channel as u8) > 0);
     }
 }

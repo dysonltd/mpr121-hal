@@ -67,6 +67,19 @@ pub enum Channel {
     Channel10,
     Channel11,
 }
+
+#[repr(u8)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive, TryFromPrimitive)]
+pub enum DebounceNumber {
+    Zero,
+    One,
+    Two,
+    Three,
+    Four,
+    Five,
+    Six,
+    Seven,
+}
 /// Threshold values for the touch and release threshold
 pub const DEFAULT_TOUCH_THRESHOLD: u8 = 12;
 pub const DEFAULT_RELEASE_THRESOLD: u8 = 6;
