@@ -68,6 +68,12 @@ pub enum Channel {
     Channel11,
 }
 
+impl Channel {
+    pub fn get_mask(self) -> u16 {
+        return 1 << u8::from(self);
+    }
+}
+
 #[repr(u8)]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive, TryFromPrimitive)]
 pub enum DebounceNumber {

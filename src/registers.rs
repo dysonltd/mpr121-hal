@@ -6,6 +6,7 @@ pub enum Register {
     TouchStatusH = 0x01,
     FiltData0L = 0x04,
     FiltData0H = 0x05,
+    //TODO: add extra channels
     Baseline0 = 0x1E,
     BaseLine1 = 0x1F,
     BaseLine2 = 0x20,
