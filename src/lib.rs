@@ -12,7 +12,7 @@
 
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use registers::Register;
-use strum::EnumIter;
+use strum_macros::EnumIter;
 
 mod communications;
 pub mod mpr121;

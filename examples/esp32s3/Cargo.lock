@@ -839,6 +839,7 @@ dependencies = [
  "maybe-async",
  "num_enum",
  "strum 0.27.1",
+ "strum_macros 0.27.1",
 ]
 
 [[package]]
