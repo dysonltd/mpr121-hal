@@ -49,7 +49,9 @@ cargo run --example os_sync_basic --no-default-features --features sync
 ```
 
 More information on this can be found [here](https://github.com/dysonltd/tmag5273/blob/main/examples/README.md).
+
 ## Running your Linter Locally
+
 This project uses [MegaLinter](https://github.com/oxsecurity/megalinter) which provides linters for various different file formats and languages. When a Pull request to main is done, the linters will run and ensure the codebase is in good standing. It is recommended that you run the linter locally beforehand as it can sometimes autofix common mistakes.
 
 ```bash
@@ -57,7 +59,13 @@ npx mega-linter-runner
 ```
 
 You will need to have docker and Node installed to use this, more information can be found on their [repo](https://github.com/oxsecurity/megalinter)
+
+### Issues with Running Mega Linter on Forks
+
+Sadly due to the way GitHub handles PAT Tokens we are unable to run all of MegaLinters functionality when processing Pull Requests from forks. It is recommended that you run the linter locally as stated above, otherwise you can setup your own PAT token for your fork repository and make a PR there in which you will receive the full capability of MegaLinter.
+
 ### Issues with rust fmt
+
 Currently at the time of this commit `rust fmt` is not supported as part of MegaLinter, thus to ensure it is correctly formatted we have added an extra build stage which can be seen [here](./.github/workflows/mega-linter.yaml). You can run this locally using
 
 ```bash
