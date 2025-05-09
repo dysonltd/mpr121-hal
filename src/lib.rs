@@ -12,6 +12,7 @@
 
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use registers::Register;
+use strum::EnumIter;
 
 mod communications;
 pub mod mpr121;
@@ -52,7 +53,9 @@ pub enum Mpr121Address {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive, TryFromPrimitive)]
+#[derive(
+    Clone, Copy, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive, TryFromPrimitive, EnumIter,
+)]
 pub enum Channel {
     Channel0,
     Channel1,
