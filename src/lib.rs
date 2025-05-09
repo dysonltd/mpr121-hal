@@ -10,7 +10,7 @@
 #![deny(unsafe_code, warnings)]
 #![no_std]
 
-use num_enum::IntoPrimitive;
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 use registers::Register;
 
 mod communications;
@@ -51,6 +51,22 @@ pub enum Mpr121Address {
     Scl = 0x5d,
 }
 
+#[repr(u8)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive, TryFromPrimitive)]
+pub enum Channel {
+    Channel0,
+    Channel1,
+    Channel2,
+    Channel3,
+    Channel4,
+    Channel5,
+    Channel6,
+    Channel7,
+    Channel8,
+    Channel9,
+    Channel10,
+    Channel11,
+}
 /// Threshold values for the touch and release threshold
 pub const DEFAULT_TOUCH_THRESHOLD: u8 = 12;
 pub const DEFAULT_RELEASE_THRESOLD: u8 = 6;

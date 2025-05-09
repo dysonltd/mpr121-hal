@@ -3,7 +3,7 @@ use embedded_hal::i2c::I2c;
 #[cfg(feature = "async")]
 use embedded_hal_async::i2c::I2c;
 
-use crate::{registers::*, NUM_TOUCH_CHANNELS};
+use crate::{registers::*, Channel, NUM_TOUCH_CHANNELS};
 use crate::{Mpr121Address, Mpr121Error};
 
 pub struct Mpr121<I2C: I2c> {
@@ -171,11 +171,8 @@ impl<I2C: I2c> Mpr121<I2C> {
     ///
     /// Note that an error is returned, if `channel > 11`.
     #[maybe_async::maybe_async]
-    pub async fn get_filtered(&mut self, channel: u8) -> Result<u16, Mpr121Error> {
-        if channel > NUM_TOUCH_CHANNELS - 1 {
-            return Err(Mpr121Error::ChannelExceed);
-        }
-        let register = Register::try_from(Register::FiltData0L as u8 + channel * 2)
+    pub async fn get_filtered(&mut self, channel: Channel) -> Result<u16, Mpr121Error> {
+        let register = Register::try_from(Register::FiltData0L as u8 + channel as u8 * 2)
             .expect("This should not fail");
         let result = self.read_reg16(register).await?;
         Ok(result)
@@ -185,11 +182,7 @@ impl<I2C: I2c> Mpr121<I2C> {
     ///
     /// Note that an error is returned if `channel > 11`, or reading failed
     #[maybe_async::maybe_async]
-    pub async fn get_baseline(&mut self, channel: u8) -> Result<u8, Mpr121Error> {
-        if channel > NUM_TOUCH_CHANNELS - 1 {
-            return Err(Mpr121Error::ChannelExceed);
-        }
-
+    pub async fn get_baseline(&mut self, channel: Channel) -> Result<u8, Mpr121Error> {
         //NOTE: the original reads a 8bit value and left shifts 2bit.
         //      While the shift is correct the data sheet mentions:
         //
@@ -203,8 +196,8 @@ impl<I2C: I2c> Mpr121<I2C> {
         //      6bit, since we loose the 2MSB.
         //
         //      Therefore we read 16bit, mask out the top 6, and then shift
-        let register =
-            Register::try_from(Register::Baseline0 as u8 + channel).expect("This should not fail");
+        let register = Register::try_from(Register::Baseline0 as u8 + channel as u8)
+            .expect("This should not fail");
         let mut value = self.read_reg16(register).await?;
         value &= 0b00000011_11111100;
         let cast = (value << 2).try_into().unwrap_or(0);
@@ -227,13 +220,9 @@ impl<I2C: I2c> Mpr121<I2C> {
     ///
     /// Returns false if `channel>11`, or reading failed.
     #[maybe_async::maybe_async]
-    pub async fn get_sensor_touch(&mut self, channel: u8) -> bool {
-        if channel > NUM_TOUCH_CHANNELS - 1 {
-            return false;
-        }
-
+    pub async fn get_sensor_touch(&mut self, channel: Channel) -> bool {
         //Masks all bits except for our channel, then returns true if the bit is set
         let result = self.get_touched().await;
-        result.unwrap_or(0) & (1 << channel) > 0
+        result.unwrap_or(0) & (1 << channel as u8) > 0
     }
 }
