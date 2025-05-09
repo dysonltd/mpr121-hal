@@ -153,14 +153,13 @@ impl<I2C: I2c> Mpr121<I2C> {
 
     /// Sets the count for both touch and release. See 5.7 of the data sheet.
     ///
-    /// value must be 0..8, is clamped if it exceeds.
     #[maybe_async::maybe_async]
     pub async fn set_debounce(
         &mut self,
         trigger_debounce: DebounceNumber,
         release_debounce: DebounceNumber,
     ) -> Result<(), Mpr121Error> {
-        let bits = (u8::from(release_debounce) << 4) | (u8::from(trigger_debounce)); // TODO: Tidy This up
+        let bits = (u8::from(release_debounce) << 4) | (u8::from(trigger_debounce));
         self.write_register(Register::Debounce, bits).await?;
 
         Ok(())

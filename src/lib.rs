@@ -67,6 +67,7 @@ pub enum Channel {
     Channel10,
     Channel11,
 }
+pub const NUM_TOUCH_CHANNELS: u8 = 12;
 
 impl Channel {
     pub fn get_mask(self) -> u16 {
@@ -89,5 +90,3 @@ pub enum DebounceNumber {
 /// Threshold values for the touch and release threshold
 pub const DEFAULT_TOUCH_THRESHOLD: u8 = 12;
 pub const DEFAULT_RELEASE_THRESOLD: u8 = 6;
-
-pub const NUM_TOUCH_CHANNELS: u8 = 12;
