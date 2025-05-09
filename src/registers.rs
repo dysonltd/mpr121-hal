@@ -1,7 +1,7 @@
-use num_enum::IntoPrimitive;
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 #[repr(u8)]
-#[derive(Debug, Copy, Clone, Eq, PartialEq, IntoPrimitive, PartialOrd, Ord)]
-pub enum Registers {
+#[derive(Debug, Copy, Clone, Eq, PartialEq, IntoPrimitive, TryFromPrimitive, PartialOrd, Ord)]
+pub enum Register {
     TouchStatusL = 0x00,
     TouchStatusH = 0x01,
     FiltData0L = 0x04,
@@ -20,6 +20,28 @@ pub enum Registers {
     Fdlt = 0x35,
     TouchTh0 = 0x41,
     ReleaseTh0 = 0x42,
+    TouchTho1 = 0x43,
+    ReleaseTh1 = 0x44,
+    TouchTh2 = 0x45,
+    ReleaseTh2 = 0x46,
+    TouchTh3 = 0x47,
+    ReleaseTh3 = 0x48,
+    TouchTh4 = 0x49,
+    ReleaseTh4 = 0x4A,
+    TouchTh5 = 0x4B,
+    ReleaseTh5 = 0x4C,
+    TouchTh6 = 0x4D,
+    ReleaseTh6 = 0x4E,
+    TouchTh7 = 0x4F,
+    ReleaseTh7 = 0x50,
+    TouchTh8 = 0x51,
+    ReleaseTh8 = 0x52,
+    TouchTh9 = 0x53,
+    ReleaseTh9 = 0x54,
+    TouchTh10 = 0x55,
+    ReleaseTh10 = 0x56,
+    TouchTh11 = 0x57,
+    ReleaseTh11 = 0x58,
     Debounce = 0x5B,
     Config1 = 0x5C,
     Config2 = 0x5D,
