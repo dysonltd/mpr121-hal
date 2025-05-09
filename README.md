@@ -60,6 +60,10 @@ npx mega-linter-runner
 
 You will need to have docker and Node installed to use this, more information can be found on their [repo](https://github.com/oxsecurity/megalinter)
 
+### Issues with Running Mega Linter on Forks
+
+Sadly due to the way GitHub handles PAT Tokens we are unable to run all of MegaLinters functionality when processing Pull Requests from forks. It is recommended that you run the linter locally as stated above, otherwise you can setup your own PAT token for your fork repository and make a PR there in which you will receive the full capability of MegaLinter.
+
 ### Issues with rust fmt
 
 Currently at the time of this commit `rust fmt` is not supported as part of MegaLinter, thus to ensure it is correctly formatted we have added an extra build stage which can be seen [here](./.github/workflows/mega-linter.yaml). You can run this locally using
