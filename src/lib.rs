@@ -74,7 +74,7 @@ pub enum Channel {
 }
 
 impl Channel {
-    pub fn get_mask(self) -> u16 {
+    pub fn get_bit_mask(self) -> u16 {
         1 << u8::from(self)
     }
 }

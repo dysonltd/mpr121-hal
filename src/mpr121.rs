@@ -237,6 +237,6 @@ impl<I2C: I2c> Mpr121<I2C> {
     #[maybe_async::maybe_async]
     pub async fn get_sensor_touch(&mut self, channel: Channel) -> Result<bool, Mpr121Error> {
         let result = self.get_touched().await?;
-        Ok(result & channel.get_mask() > 0)
+        Ok(result & channel.get_bit_mask() > 0)
     }
 }
