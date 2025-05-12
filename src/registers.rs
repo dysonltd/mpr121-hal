@@ -93,12 +93,17 @@ pub enum Register {
     UpLimit = 0x7D,
     LowLimit = 0x7E,
     TargetLimit = 0x7F,
-    GpioDir = 0x76,
-    GpioEn = 0x77,
-    GpioSet = 0x78,
-    GpioClr = 0x79,
-    GpioToggle = 0x7A,
     SoftReset = 0x80,
+
+    /// GPIO Registers (0x73-0x7A)
+    GpioControl0 = 0x73,
+    GpioControl1 = 0x74,
+    GpioData = 0x75,
+    GpioDirection = 0x76,
+    GpioEnable = 0x77,
+    GpioDataSet = 0x78,
+    GpioDataClear = 0x79,
+    GpioDataToggle = 0x7A,
 }
 
 impl Register {
@@ -166,6 +171,22 @@ impl Register {
             Channel::Channel9 => Register::BaseLine9,
             Channel::Channel10 => Register::BaseLine10,
             Channel::Channel11 => Register::BaseLine11,
+        }
+    }
+
+    /// Some registers require for the sensor to be in stop mode before they can be accessed
+    pub fn require_stop(self) -> bool {
+        match self {
+            Self::Ecr
+            | Self::GpioControl0
+            | Self::GpioControl1
+            | Self::GpioData
+            | Self::GpioDirection
+            | Self::GpioEnable
+            | Self::GpioDataSet
+            | Self::GpioDataClear
+            | Self::GpioDataToggle => true,
+            _ => false,
         }
     }
 }
