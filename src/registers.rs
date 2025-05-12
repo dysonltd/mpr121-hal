@@ -5,7 +5,7 @@ use crate::Channel;
 #[derive(Debug, Copy, Clone, Eq, PartialEq, IntoPrimitive, TryFromPrimitive, PartialOrd, Ord)]
 pub enum Register {
     TouchStatus0_7 = 0x00,
-    TouchStatus0_8 = 0x01,
+    TouchStatus8_11 = 0x01,
     // OORStatus = 0x02,
     // EleproxOORStatus = 0x03,
     FiltData0MSB = 0x04,

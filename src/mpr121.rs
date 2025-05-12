@@ -148,7 +148,7 @@ impl<I2C: I2c> Mpr121<I2C> {
     #[maybe_async::maybe_async]
     pub async fn is_over_current_set(&mut self) -> Result<bool, Mpr121Error> {
         const OVER_CURRENT_PROTECTION_FLAG_MASK: u8 = 0b1000_0000;
-        let read = self.read_reg8(Register::TouchStatus0_8).await?;
+        let read = self.read_reg8(Register::TouchStatus8_11).await?;
         //If bit D7 is set, we have OVCF
         Ok((read & (OVER_CURRENT_PROTECTION_FLAG_MASK)) > 0)
     }
@@ -228,7 +228,7 @@ impl<I2C: I2c> Mpr121<I2C> {
     #[maybe_async::maybe_async]
     pub async fn get_touched(&mut self) -> Result<u16, Mpr121Error> {
         //mask upper four bits returns the rest
-        let unmasked = self.read_reg16(Register::TouchStatus0_8).await?;
+        let unmasked = self.read_reg16(Register::TouchStatus8_11).await?;
         Ok(unmasked & 0x0fff)
     }
 
