@@ -44,7 +44,7 @@ pub enum Mpr121Error {
 ///
 /// Have a look at page 4 "serial communication" for further specification.
 #[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive)]
 pub enum Mpr121Address {
     Default = 0x5a,
     Vdd = 0x5b,
@@ -54,7 +54,7 @@ pub enum Mpr121Address {
 
 #[repr(u8)]
 #[derive(
-    Clone, Copy, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive, TryFromPrimitive, EnumIter,
+    Clone, Copy, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive, TryFromPrimitive, EnumIter, Debug,
 )]
 pub enum Channel {
     Channel0,
@@ -70,7 +70,6 @@ pub enum Channel {
     Channel10,
     Channel11,
 }
-pub const NUM_TOUCH_CHANNELS: u8 = 12;
 
 impl Channel {
     pub fn get_mask(self) -> u16 {
@@ -79,7 +78,7 @@ impl Channel {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive, TryFromPrimitive)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive, TryFromPrimitive)]
 pub enum DebounceNumber {
     Zero,
     One,

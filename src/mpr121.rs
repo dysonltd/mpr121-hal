@@ -4,7 +4,7 @@ use embedded_hal::i2c::I2c;
 use embedded_hal_async::i2c::I2c;
 use strum::IntoEnumIterator;
 
-use crate::{registers::*, Channel, DebounceNumber, NUM_TOUCH_CHANNELS};
+use crate::{registers::*, Channel, DebounceNumber};
 use crate::{Mpr121Address, Mpr121Error};
 
 pub struct Mpr121<I2C: I2c> {
@@ -53,7 +53,7 @@ impl<I2C: I2c> Mpr121<I2C> {
 
         if check_reset_flags {
             // read config register
-            let config = dev.read_reg8(Register::Config1).await?;
+            let config = dev.read_reg8(Register::Config2).await?;
 
             // Check if it is 0x24, which is the default configuration.
             // Otherwise bail.
@@ -116,9 +116,10 @@ impl<I2C: I2c> Mpr121<I2C> {
             self.write_register(Register::TargetLimit, 180).await?; // = UPLIMIT * 0.9
             self.write_register(Register::LowLimit, 130).await?; // = UPLIMIT * 0.65
         }
-
         //enable electrodes and return to start mode
-        let ecr_setting = 0b10000000 + NUM_TOUCH_CHANNELS; // enable all 12 electrodes
+        let ecr_setting = 0b10000000
+            + u8::try_from(Channel::iter().len())
+                .expect("This should not fail, Channels should be able to fit in 8 bits"); // enable all 12 electrodes
         self.write_register(Register::Ecr, ecr_setting).await?;
         Ok(())
     }
