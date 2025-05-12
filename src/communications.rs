@@ -13,9 +13,7 @@ impl<I2C: I2c> Mpr121<I2C> {
         reg: Register,
         value: u8,
     ) -> Result<(), Mpr121Error> {
-        //MPR121 must be in Stop mode for most reg writes. This is not true for all, but
-        // we are conservative here.
-        let addr_val = self.addr.into();
+        let addr_val: u8 = self.addr.into();
         //Check in which mode we are by reading ECR.
         let ecr_state = self.read_reg8(Register::Ecr).await?;
 

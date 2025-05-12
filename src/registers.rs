@@ -176,17 +176,17 @@ impl Register {
 
     /// Some registers require for the sensor to be in stop mode before they can be accessed
     pub fn require_stop(self) -> bool {
-        match self {
+        matches!(
+            self,
             Self::Ecr
-            | Self::GpioControl0
-            | Self::GpioControl1
-            | Self::GpioData
-            | Self::GpioDirection
-            | Self::GpioEnable
-            | Self::GpioDataSet
-            | Self::GpioDataClear
-            | Self::GpioDataToggle => true,
-            _ => false,
-        }
+                | Self::GpioControl0
+                | Self::GpioControl1
+                | Self::GpioData
+                | Self::GpioDirection
+                | Self::GpioEnable
+                | Self::GpioDataSet
+                | Self::GpioDataClear
+                | Self::GpioDataToggle
+        )
     }
 }

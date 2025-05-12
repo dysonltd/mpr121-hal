@@ -137,6 +137,9 @@ impl<I2C: I2c> Mpr121<I2C> {
         Ok(result)
     }
 
+    pub async fn is_connected() -> bool {
+        todo!();
+    }
     /// Returns true if over-current is detected by the device.
     /// In that case you probably have to check your circuit
     #[maybe_async::maybe_async]
