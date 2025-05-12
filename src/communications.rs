@@ -20,6 +20,7 @@ impl<I2C: I2c> Mpr121<I2C> {
         let reg_val: u8 = reg.into();
         //ECR and 0x73..0x71 don't need stop. makes this a bit faster
         if reg == Register::Ecr || (0x73..=0x7a).contains(&reg_val) {
+            //TODO: replace magic numbers
             stop_required = false;
         }
         //Check in which mode we are by reading ECR.
@@ -28,7 +29,7 @@ impl<I2C: I2c> Mpr121<I2C> {
         if stop_required {
             //set to stop
             let result = self.i2c.write(addr, &[Register::Ecr.into(), 0x00]).await;
-            result.map_err(|_| Mpr121Error::WriteError(Register::Ecr))?;
+            result.map_err(|_| Mpr121Error::WriteError(reg))?;
         }
 
         //actual write
@@ -56,6 +57,7 @@ impl<I2C: I2c> Mpr121<I2C> {
             .write_read(self.addr.into(), &[reg.into()], &mut val)
             .await;
         if result.is_err() {
+            //todo redo this
             return Err(Mpr121Error::ReadError(reg));
         }
         Ok(val[0])
@@ -70,6 +72,7 @@ impl<I2C: I2c> Mpr121<I2C> {
             .write_read(self.addr.into(), &[reg.into()], &mut val)
             .await;
         if result.is_err() {
+            //TODO: redo this
             return Err(Mpr121Error::ReadError(reg));
         }
         Ok(u16::from_le_bytes(val))
