@@ -27,12 +27,12 @@ impl<I2C: I2c> Mpr121<I2C> {
     pub async fn new(
         i2c: I2C,
         addr: Mpr121Address,
-        use_auto_config: bool, //TODO Replace with new_default method
+        use_auto_config: bool,
         check_reset_flags: bool,
     ) -> Result<Self, Mpr121Error> {
         let mut dev = Mpr121 { i2c, addr };
 
-        //TODO: Add Check to see if device is present on the bus
+        //TODO: Add Check to see if device is present on the bus This caught me out when refactoring and thus didnt realise it wasnt plugged in
         //reset
         let error = dev.write_register(Register::SoftReset, 0x63).await.err();
         error.map(|e| match e {
