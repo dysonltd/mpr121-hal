@@ -62,7 +62,7 @@ You will need to have docker and Node installed to use this, more information ca
 
 ### Issues with Running Mega Linter on Forks
 
-Sadly due to the way GitHub handles PAT Tokens we are unable to run all of MegaLinters functionality when processing Pull Requests from forks. It is recommended that you run the linter locally as stated above, otherwise you can setup your own PAT token for your fork repository and make a PR there in which you will receive the full capability of MegaLinter.
+Sadly due to the way GitHub handles PAT Tokens we are unable to run all of MegaLinters functionality when processing Pull Requests from forks. It is recommended that you run the linter locally as stated above, otherwise you can [setup your own PAT token](https://github.com/marketplace/actions/megalinter#apply-fixes-issues) for your fork repository and make a PR there in which you will receive the full capability of MegaLinter.
 
 #### PAT Token for Mega Linter running on Forks
 
@@ -70,7 +70,6 @@ There are Two PAT Tokens requred for full GitHub MegaLinter functionality. One i
 
 - Commit Statuses: Read and Write
 - Contents: Read and Write
-- Issues: Read and Write
 - Pull Requests: Read and Write
 - Work Flows: Read and Write
 
@@ -92,7 +91,6 @@ As such it requires another PAT Token named `DEPENDABOT` with the following cred
 
 - Commit Statuses: Read and Write
 - Contents: Read and Write
-- Issues: Read and Write
 - Pull Requests: Read and Write
 - Work Flows: Read and Write
 
