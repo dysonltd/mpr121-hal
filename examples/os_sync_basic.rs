@@ -29,7 +29,7 @@ fn main() {
             println!(
                 "Channel: {:?} : Touch Status: {:?}",
                 selected,
-                mpr121.get_sensor_touch(selected),
+                mpr121.get_sensor_touch(selected).unwrap(),
             );
         }
         // Add a delay to avoid flooding the output

@@ -7,7 +7,6 @@
 //! The chip's data sheet can be found [here](https://www.nxp.com/docs/en/data-sheet/MPR121.pdf). The implementation however mostly mirrors the Adafruit implementation,
 //! since this is probably the most widely used one.
 //!
-#![deny(unsafe_code, warnings)]
 #![no_std]
 
 use num_enum::{IntoPrimitive, TryFromPrimitive};

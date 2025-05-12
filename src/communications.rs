@@ -16,7 +16,7 @@ impl<I2C: I2c> Mpr121<I2C> {
         //MPR121 must be in Stop mode for most reg writes. This is not true for all, but
         // we are conservative here.
         let mut stop_required = true;
-        let addr = self.addr.into();
+        let addr_val = self.addr.into();
         let reg_val: u8 = reg.into();
         //ECR and 0x73..0x71 don't need stop. makes this a bit faster
         if reg == Register::Ecr || (0x73..=0x7a).contains(&reg_val) {
@@ -28,19 +28,22 @@ impl<I2C: I2c> Mpr121<I2C> {
 
         if stop_required {
             //set to stop
-            let result = self.i2c.write(addr, &[Register::Ecr.into(), 0x00]).await;
-            result.map_err(|_| Mpr121Error::WriteError(reg))?;
+            let result = self
+                .i2c
+                .write(addr_val, &[Register::Ecr.into(), 0x00])
+                .await;
+            result.map_err(|_| Mpr121Error::WriteError(Register::Ecr))?;
         }
 
         //actual write
-        let result = self.i2c.write(addr, &[reg.into(), value]).await;
+        let result = self.i2c.write(addr_val, &[reg.into(), value]).await;
         result.map_err(|_| Mpr121Error::WriteError(reg))?;
 
         //reset to old ecr state
         if stop_required {
             let result = self
                 .i2c
-                .write(addr, &[Register::Ecr.into(), ecr_state])
+                .write(addr_val, &[Register::Ecr.into(), ecr_state])
                 .await;
             result.map_err(|_| Mpr121Error::WriteError(Register::Ecr))?;
         }

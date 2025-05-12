@@ -31,6 +31,8 @@ impl<I2C: I2c> Mpr121<I2C> {
         check_reset_flags: bool,
     ) -> Result<Self, Mpr121Error> {
         let mut dev = Mpr121 { i2c, addr };
+
+        //TODO: Add Check to see if device is present on the bus
         //reset
         let error = dev.write_register(Register::SoftReset, 0x63).await.err();
         error.map(|e| match e {
