@@ -4,9 +4,8 @@ use embedded_hal::i2c::I2c;
 use embedded_hal_async::i2c::I2c;
 use strum::IntoEnumIterator;
 
-use crate::{registers::*, Channel, DebounceNumber};
+use crate::{constants::*, registers::*, Channel, DebounceNumber};
 use crate::{Mpr121Address, Mpr121Error};
-
 pub struct Mpr121<I2C: I2c> {
     pub(crate) i2c: I2C,
     pub(crate) addr: Mpr121Address,
@@ -34,7 +33,10 @@ impl<I2C: I2c> Mpr121<I2C> {
 
         //TODO: Add Check to see if device is present on the bus This caught me out when refactoring and thus didnt realise it wasnt plugged in
         //reset
-        let error = dev.write_register(Register::SoftReset, 0x63).await.err();
+        let error = dev
+            .write_register(Register::SoftReset, SOFT_RESET_VALUE)
+            .await
+            .err();
         error.map(|e| match e {
             Mpr121Error::ReadError(reg) => Mpr121Error::ResetFailed {
                 was_read: true,
@@ -55,7 +57,9 @@ impl<I2C: I2c> Mpr121<I2C> {
 
         if check_reset_flags {
             // read config register
-            let config = dev.read_reg8(Register::Config2).await?;
+            let config = dev
+                .read_reg8(Register::GlobalChargeDischargeTimeConfig)
+                .await?;
 
             // Check if it is 0x24, which is the default configuration.
             // Otherwise bail.
@@ -66,11 +70,8 @@ impl<I2C: I2c> Mpr121<I2C> {
             }
         }
         //Initialise the device to the similar settings as Adafruit
-        dev.set_thresholds(
-            crate::DEFAULT_TOUCH_THRESHOLD,
-            crate::DEFAULT_RELEASE_THRESOLD,
-        )
-        .await?;
+        dev.set_thresholds(DEFAULT_TOUCH_THRESHOLD, DEFAULT_RELEASE_THRESOLD)
+            .await?;
         dev.initialise_registers(use_auto_config).await?;
 
         Ok(dev)
@@ -107,8 +108,10 @@ impl<I2C: I2c> Mpr121<I2C> {
             .await?;
 
         self.write_register(Register::Debounce, 0x0).await?;
-        self.write_register(Register::Config1, 0x10).await?;
-        self.write_register(Register::Config2, 0x20).await?;
+        self.write_register(Register::GlobalChargeDischargeCurrentConfig, 0x10)
+            .await?;
+        self.write_register(Register::GlobalChargeDischargeTimeConfig, 0x20)
+            .await?;
 
         if use_auto_config {
             self.write_register(Register::AutoConfig0, 0x0b).await?;
@@ -185,7 +188,6 @@ impl<I2C: I2c> Mpr121<I2C> {
     ///
     /// Note that the resulting value is only 10bit wide.
     ///
-    /// Note that an error is returned, if `channel > 11`.
     #[maybe_async::maybe_async]
     pub async fn get_filtered(&mut self, channel: Channel) -> Result<u16, Mpr121Error> {
         let register = Register::get_filtered_data_msb(channel);
@@ -214,7 +216,7 @@ impl<I2C: I2c> Mpr121<I2C> {
         let register = Register::get_baseline(channel);
         let mut value = self.read_reg16(register).await?;
         value &= 0b00000011_11111100;
-        let cast = (value << 2).try_into().unwrap_or(0);
+        let cast = (value << 2).try_into().unwrap_or(0); // TODO: Get Clarification on this
         Ok(cast)
     }
 

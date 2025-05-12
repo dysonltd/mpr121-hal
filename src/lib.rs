@@ -14,6 +14,7 @@ use registers::Register;
 use strum_macros::EnumIter;
 
 mod communications;
+mod constants;
 pub mod mpr121;
 mod registers;
 
@@ -90,6 +91,3 @@ pub enum DebounceNumber {
     Six,
     Seven,
 }
-/// Threshold values for the touch and release threshold
-pub const DEFAULT_TOUCH_THRESHOLD: u8 = 12;
-pub const DEFAULT_RELEASE_THRESOLD: u8 = 6;

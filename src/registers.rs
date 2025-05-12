@@ -83,8 +83,8 @@ pub enum Register {
     TouchThreshold11 = 0x57,
     ReleaseThreshold11 = 0x58,
     Debounce = 0x5B,
-    Config1 = 0x5C,
-    Config2 = 0x5D,
+    GlobalChargeDischargeCurrentConfig = 0x5C,
+    GlobalChargeDischargeTimeConfig = 0x5D,
     ChargeCurr0 = 0x5F,
     ChargeTime1 = 0x6C,
     Ecr = 0x5E,
@@ -176,8 +176,9 @@ impl Register {
 
     /// Some registers require for the sensor to be in stop mode before they can be accessed
     pub fn require_stop(self) -> bool {
-        matches!(
+        !matches!(
             self,
+            // These Registers require you to put the device in STOP mode in order to read/write too
             Self::Ecr
                 | Self::GpioControl0
                 | Self::GpioControl1
