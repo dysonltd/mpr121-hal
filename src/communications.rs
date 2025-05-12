@@ -19,24 +19,24 @@ impl<I2C: I2c> Mpr121<I2C> {
 
         if reg.require_stop() {
             //set to stop
-            let result = self
-                .i2c
+            self.i2c
                 .write(addr_val, &[Register::Ecr.into(), 0x00])
-                .await;
-            result.map_err(|_| Mpr121Error::WriteError(Register::Ecr))?;
+                .await
+                .map_err(|_| Mpr121Error::WriteError(Register::Ecr))?;
         }
 
         //actual write
-        let result = self.i2c.write(addr_val, &[reg.into(), value]).await;
-        result.map_err(|_| Mpr121Error::WriteError(reg))?;
+        self.i2c
+            .write(addr_val, &[reg.into(), value])
+            .await
+            .map_err(|_| Mpr121Error::WriteError(reg))?;
 
         //reset to old ecr state
         if reg.require_stop() {
-            let result = self
-                .i2c
+            self.i2c
                 .write(addr_val, &[Register::Ecr.into(), ecr_state])
-                .await;
-            result.map_err(|_| Mpr121Error::WriteError(Register::Ecr))?;
+                .await
+                .map_err(|_| Mpr121Error::WriteError(Register::Ecr))?;
         }
 
         Ok(())
@@ -46,14 +46,10 @@ impl<I2C: I2c> Mpr121<I2C> {
     //Reads the value, returns Err, if reading failed.
     pub(crate) async fn read_reg8(&mut self, reg: Register) -> Result<u8, Mpr121Error> {
         let mut val = [0u8];
-        let result = self
-            .i2c
+        self.i2c
             .write_read(self.addr.into(), &[reg.into()], &mut val)
-            .await;
-        if result.is_err() {
-            //todo redo this
-            return Err(Mpr121Error::ReadError(reg));
-        }
+            .await
+            .map_err(|_| Mpr121Error::ReadError(reg))?;
         Ok(val[0])
     }
 
@@ -61,14 +57,10 @@ impl<I2C: I2c> Mpr121<I2C> {
     //Reads the value, returns Err, if reading failed.
     pub(crate) async fn read_reg16(&mut self, reg: Register) -> Result<u16, Mpr121Error> {
         let mut val = [0u8, 0u8];
-        let result = self
-            .i2c
+        self.i2c
             .write_read(self.addr.into(), &[reg.into()], &mut val)
-            .await;
-        if result.is_err() {
-            //TODO: redo this
-            return Err(Mpr121Error::ReadError(reg));
-        }
+            .await
+            .map_err(|_| Mpr121Error::ReadError(reg))?;
         Ok(u16::from_le_bytes(val))
     }
 }
