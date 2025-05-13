@@ -1,3 +1,4 @@
+//! Linux / MacOS Specific Tests, responsible for creating the I2C Device thriugh the FT232H Breakout Board. These tests run in sync mode
 #[cfg(test)]
 pub mod linux {
     pub mod tests;

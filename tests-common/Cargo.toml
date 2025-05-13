@@ -1,11 +1,8 @@
 [package]
 name = "tests-common"
-description = "Common tests for the MPR121 Driver that are cross platform"
+description = "Common tests for the MPR121 Driver that are cross platform. Currently using Synchronous Embedded Hal"
 version = "0.1.0"
 edition = "2021"
-
-[features]
-
 
 [dependencies]
 mpr121-hal = {path="../"}
