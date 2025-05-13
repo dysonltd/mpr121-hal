@@ -22,6 +22,8 @@ impl<I2C: I2c> Mpr121<I2C> {
     ///
     /// Note that we use the same default values as the Adafruit implementation, except for threshold values.
     /// Use [set_thresholds](Self::set_thresholds) to define those.
+    ///
+    /// In the event of an error, returns [Mpr121Error]
     #[maybe_async::maybe_async]
     pub async fn new(
         i2c: I2C,
@@ -61,10 +63,9 @@ impl<I2C: I2c> Mpr121<I2C> {
                 .read_reg8(Register::GlobalChargeDischargeTimeConfig)
                 .await?;
 
-            // Check if it is 0x24, which is the default configuration.
-            // Otherwise bail.
-            if config != 0x24 {
+            if config != Register::GlobalChargeDischargeTimeConfig.get_default_value() {
                 return Err(Mpr121Error::InitFailed {
+                    // Check if device is having a short circuit fault
                     over_current_protection: dev.is_over_current_set().await?,
                 });
             }
@@ -108,8 +109,11 @@ impl<I2C: I2c> Mpr121<I2C> {
             .await?;
 
         self.write_register(Register::Debounce, 0x0).await?;
-        self.write_register(Register::GlobalChargeDischargeCurrentConfig, 0x10)
-            .await?;
+        self.write_register(
+            Register::GlobalChargeDischargeCurrentConfig,
+            Register::GlobalChargeDischargeCurrentConfig.get_default_value(),
+        )
+        .await?;
         self.write_register(Register::GlobalChargeDischargeTimeConfig, 0x20)
             .await?;
 
@@ -124,12 +128,12 @@ impl<I2C: I2c> Mpr121<I2C> {
         //enable electrodes and return to start mode
         let ecr_setting = 0b10000000
             + u8::try_from(Channel::iter().len())
-                .expect("This should not fail, Channels should be able to fit in 8 bits"); // enable all 12 electrodes
+                .expect("This should not fail, number of channels should be able to fit in 8 bits"); // enable all 12 electrodes
         self.write_register(Register::Ecr, ecr_setting).await?;
         Ok(())
     }
 
-    ///Initializes the driver assuming the sensors address is the default one (0x5a).
+    /// Initializes the driver assuming the sensors address is the default one (0x5a).
     /// If this fails, consider searching for the driver.
     /// Or following the documentation on setting a driver address, and use [new](Self::new) to specify the address.
     ///
@@ -139,16 +143,13 @@ impl<I2C: I2c> Mpr121<I2C> {
         let result = Self::new(i2c, Mpr121Address::Default, false, true).await?;
         Ok(result)
     }
-
-    #[maybe_async::maybe_async]
-    pub async fn is_connected() -> bool {
-        todo!();
-    }
     /// Returns true if over-current is detected by the device.
     /// In that case you probably have to check your circuit
+    ///
+    /// In the event of an error [Mpr121Error] is returned
     #[maybe_async::maybe_async]
     pub async fn is_over_current_set(&mut self) -> Result<bool, Mpr121Error> {
-        const OVER_CURRENT_PROTECTION_FLAG_MASK: u8 = 0b1000_0000;
+        const OVER_CURRENT_PROTECTION_FLAG_MASK: u8 = 0b1 << 7;
         let read = self.read_reg8(Register::TouchStatus8_11).await?;
         //If bit D7 is set, we have OVCF
         Ok((read & (OVER_CURRENT_PROTECTION_FLAG_MASK)) > 0)
@@ -158,6 +159,7 @@ impl<I2C: I2c> Mpr121<I2C> {
     /// threshold. This creates some debounce characteristics. The correct thresholds depend on the application.
     ///
     /// Have a look at [note AN3892](https://www.nxp.com/docs/en/application-note/AN3892.pdf) of the mpr121 guidelines.
+    /// In the event of an error [Mpr121Error] is returned
     #[maybe_async::maybe_async]
     pub async fn set_thresholds(&mut self, touch: u8, release: u8) -> Result<(), Mpr121Error> {
         for channel in Channel::iter() {
@@ -170,8 +172,9 @@ impl<I2C: I2c> Mpr121<I2C> {
         Ok(())
     }
 
-    /// Sets the count for both touch and release. See 5.7 of the data sheet.
+    /// Sets the count for both touch and release. See 5.7 of the [Mpr121 Data Sheet](https://www.nxp.com/docs/en/data-sheet/MPR121.pdf).
     ///
+    /// In the event of an error [Mpr121Error] is returned
     #[maybe_async::maybe_async]
     pub async fn set_debounce(
         &mut self,
@@ -180,7 +183,6 @@ impl<I2C: I2c> Mpr121<I2C> {
     ) -> Result<(), Mpr121Error> {
         let bits = (u8::from(release_debounce) << 4) | (u8::from(trigger_debounce));
         self.write_register(Register::Debounce, bits).await?;
-
         Ok(())
     }
 
@@ -189,6 +191,7 @@ impl<I2C: I2c> Mpr121<I2C> {
     ///
     /// Note that the resulting value is only 10bit wide.
     ///
+    /// Otherwise [Mpr121Error] is returned
     #[maybe_async::maybe_async]
     pub async fn get_filtered(&mut self, channel: Channel) -> Result<u16, Mpr121Error> {
         let register = Register::get_filtered_data_msb(channel);
@@ -198,7 +201,7 @@ impl<I2C: I2c> Mpr121<I2C> {
 
     /// Reads the baseline data for the channel. Note that this has only a resolution of 8bit.
     ///
-    /// Note that an error is returned if `channel > 11`, or reading failed
+    /// Otherwise [Mpr121Error] is returned
     #[maybe_async::maybe_async]
     pub async fn get_baseline(&mut self, channel: Channel) -> Result<u8, Mpr121Error> {
         //NOTE: the original reads a 8bit value and left shifts 2bit.
@@ -217,7 +220,9 @@ impl<I2C: I2c> Mpr121<I2C> {
         let register = Register::get_baseline(channel);
         let mut value = self.read_reg16(register).await?;
         value &= 0b00000011_11111100;
-        let cast = (value << 2).try_into().unwrap_or(0); // TODO: Get Clarification on this
+        let cast = (value << 2)
+            .try_into() // If this fails to convert into u8
+            .map_err(|_| Mpr121Error::DataConversionError(register))?;
         Ok(cast)
     }
 
@@ -225,7 +230,7 @@ impl<I2C: I2c> Mpr121<I2C> {
     /// pin is touched or not. Use bit shifting / masking to generate a mask, or, if only one sensor's value is
     /// needed, use [get_touch_state](Self::get_sensor_touch).
     ///
-    /// Returns an error if reading failed.
+    /// Otherwise [Mpr121Error] is returned
     #[maybe_async::maybe_async]
     pub async fn get_touched(&mut self) -> Result<u16, Mpr121Error> {
         //mask upper four bits returns the rest
@@ -235,6 +240,7 @@ impl<I2C: I2c> Mpr121<I2C> {
 
     ///Returns the touch state of the given sensor.
     ///
+    /// Otherwise [Mpr121Error] is returned
     #[maybe_async::maybe_async]
     pub async fn get_sensor_touch(&mut self, channel: Channel) -> Result<bool, Mpr121Error> {
         let result = self.get_touched().await?;

@@ -30,6 +30,8 @@ pub enum Mpr121Error {
     ChannelExceed,
     ///If a read operation failed, contains the address that failed.
     ReadError(Register),
+    /// If a data conversion failed, contains the address that failed to convert from
+    DataConversionError(Register),
     ///If a write operation failed, contains the address that failed.
     WriteError(Register),
     ///If sending the reset signal failed, contains the register that failed.

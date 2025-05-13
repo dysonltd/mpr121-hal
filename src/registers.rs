@@ -107,6 +107,7 @@ pub enum Register {
 }
 
 impl Register {
+    /// Returns the threshold register associated with the channel
     pub fn get_treshold_register(channel: Channel) -> Register {
         match channel {
             Channel::Channel0 => Register::TouchThreshold0,
@@ -123,7 +124,7 @@ impl Register {
             Channel::Channel11 => Register::TouchThreshold11,
         }
     }
-
+    /// Returns the release register associated with the channel
     pub fn get_release_register(channel: Channel) -> Register {
         match channel {
             Channel::Channel0 => Register::ReleaseThreshold0,
@@ -141,6 +142,7 @@ impl Register {
         }
     }
 
+    /// Returns the Most Significant Byte [MSB] register associated with the channel
     pub fn get_filtered_data_msb(channel: Channel) -> Register {
         match channel {
             Channel::Channel0 => Register::FiltData0MSB,
@@ -157,6 +159,8 @@ impl Register {
             Channel::Channel11 => Register::FiltData11MSB,
         }
     }
+
+    /// Returns the baseline register associated with the channel
     pub fn get_baseline(channel: Channel) -> Register {
         match channel {
             Channel::Channel0 => Register::BaseLine0,
@@ -189,5 +193,14 @@ impl Register {
                 | Self::GpioDataClear
                 | Self::GpioDataToggle
         )
+    }
+
+    /// Returns the default value of the Register
+    pub fn get_default_value(self) -> u8 {
+        match self {
+            Self::GlobalChargeDischargeCurrentConfig => 0x10,
+            Self::GlobalChargeDischargeTimeConfig => 0x24,
+            _ => 0x00,
+        }
     }
 }
