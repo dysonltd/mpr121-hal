@@ -7,6 +7,8 @@
 //! The chip's data sheet can be found [here](https://www.nxp.com/docs/en/data-sheet/MPR121.pdf). The implementation however mostly mirrors the Adafruit implementation,
 //! since this is probably the most widely used one.
 //!
+//! When working with this crate you can either use it in Synchronous/Blocking mode with the [embedded-hal](https://crates.io/crates/embedded-hal) or in Asynchronous mode with the [embedded-hal-async](https://crates.io/crates/embedded-hal-async).
+//!This can be done by using the features `sync` and `async`. This crate does not pull in the `std` library and thus is fully `no-std`. For MCU scale devices [Embassy](https://github.com/embassy-rs/embassy) is a valid framework or [Tokio](https://tokio.rs/) for Linux/MacOS based devices.
 #![no_std]
 
 use num_enum::{IntoPrimitive, TryFromPrimitive};
