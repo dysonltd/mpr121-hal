@@ -6,8 +6,8 @@ use crate::Channel;
 pub enum Register {
     TouchStatus0_7 = 0x00,
     TouchStatus8_11 = 0x01,
-    // OORStatus = 0x02,
-    // EleproxOORStatus = 0x03,
+    OORStatus = 0x02,
+    EleproxOORStatus = 0x03,
     FiltData0MSB = 0x04,
     FiltData0LSB = 0x05,
     FiltData1MSB = 0x06,
@@ -46,7 +46,7 @@ pub enum Register {
     BaseLine9 = 0x27,
     BaseLine10 = 0x28,
     BaseLine11 = 0x29,
-    // EleproxBaseLine = 0x2A,
+    EleproxBaseLine = 0x2A,
     MaximumHalfDeltaRising = 0x2B,
     NoiseHalfDataRising = 0x2C,
     NoiseCountLimitRising = 0x2D,
@@ -95,7 +95,7 @@ pub enum Register {
     TargetLimit = 0x7F,
     SoftReset = 0x80,
 
-    /// GPIO Registers (0x73-0x7A)
+    // GPIO Registers (0x73-0x7A)
     GpioControl0 = 0x73,
     GpioControl1 = 0x74,
     GpioData = 0x75,
