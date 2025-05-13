@@ -24,6 +24,7 @@ compile_error!("You cannot use both sync and async features at the same time. Pl
 #[cfg(all(not(feature = "async"), not(feature = "sync")))]
 compile_error!("You must enable either the sync or async feature. Please choose one.");
 
+/// The MPR121 Device can have a multitude of errors when running for the most part these will be causes by I2C errors. This library wraps the errors into the following enum
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum Mpr121Error {
     ///If an operation exceeds the channel count (typically 12).
@@ -39,8 +40,6 @@ pub enum Mpr121Error {
     ///If the reset did not happen as expected. if ovcp is set, the reset failed because over-current protection
     /// is active.
     InitFailed { over_current_protection: bool },
-    ///If on intialisation the Sensor does not respond, its possibly disconnected
-    InitConnectionFailed,
 }
 
 ///The four values the sensor can be addressed as. Note that the address of the device is determined by
@@ -60,6 +59,7 @@ pub enum Mpr121Address {
 #[derive(
     Clone, Copy, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive, TryFromPrimitive, EnumIter, Debug,
 )]
+/// This enum represents the channels of the sensor and is used to get the corresponding touch values
 pub enum Channel {
     Channel0,
     Channel1,
@@ -76,13 +76,14 @@ pub enum Channel {
 }
 
 impl Channel {
-    pub fn get_bit_mask(self) -> u16 {
+    pub(crate) fn get_bit_mask(self) -> u16 {
         1 << u8::from(self)
     }
 }
 
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive, TryFromPrimitive)]
+/// This enum represents the number of debounces see section 5.7 in the [MPR121 Data Sheet](https://www.nxp.com/docs/en/data-sheet/MPR121.pdf)
 pub enum DebounceNumber {
     Zero,
     One,

@@ -6,6 +6,8 @@ use strum::IntoEnumIterator;
 
 use crate::{constants::*, registers::*, Channel, DebounceNumber};
 use crate::{Mpr121Address, Mpr121Error};
+
+/// This is the Sensor itself and takes in an I2C Device or bus see the examples folder for more details. The driver can work in either Async or Sync mode depending on which version of the embedded-hal you are using
 pub struct Mpr121<I2C: I2c> {
     pub(crate) i2c: I2C,
     pub(crate) addr: Mpr121Address,
