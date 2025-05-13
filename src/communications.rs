@@ -8,7 +8,11 @@ use crate::{mpr121::Mpr121, registers::*, Mpr121Error};
 impl<I2C: I2c> Mpr121<I2C> {
     #[maybe_async::maybe_async]
     //Write implementation. Returns an error if a read or write operation failed. The error contains the failing register.
-    pub async fn write_register(&mut self, reg: Register, value: u8) -> Result<(), Mpr121Error> {
+    pub(crate) async fn write_register(
+        &mut self,
+        reg: Register,
+        value: u8,
+    ) -> Result<(), Mpr121Error> {
         let addr_val: u8 = self.addr.into();
         //Check in which mode we are by reading ECR.
         let ecr_state = self.read_reg8(Register::Ecr).await?;
@@ -40,7 +44,7 @@ impl<I2C: I2c> Mpr121<I2C> {
 
     #[maybe_async::maybe_async]
     //Reads the value, returns Err, if reading failed.
-    pub async fn read_reg8(&mut self, reg: Register) -> Result<u8, Mpr121Error> {
+    pub(crate) async fn read_reg8(&mut self, reg: Register) -> Result<u8, Mpr121Error> {
         let mut val = [0u8];
         self.i2c
             .write_read(self.addr.into(), &[reg.into()], &mut val)
@@ -51,7 +55,7 @@ impl<I2C: I2c> Mpr121<I2C> {
 
     #[maybe_async::maybe_async]
     //Reads the value, returns Err, if reading failed.
-    pub async fn read_reg16(&mut self, reg: Register) -> Result<u16, Mpr121Error> {
+    pub(crate) async fn read_reg16(&mut self, reg: Register) -> Result<u16, Mpr121Error> {
         let mut val = [0u8, 0u8];
         self.i2c
             .write_read(self.addr.into(), &[reg.into()], &mut val)
