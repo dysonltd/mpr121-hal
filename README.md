@@ -4,6 +4,8 @@
 [![crates.io](https://img.shields.io/crates/v/mpr121-hal.svg)](https://crates.io/crates/mpr121-hal)
 <!-- markdown-link-check-enable -->
 [![docs.rs](https://img.shields.io/docsrs/mpr121-hal?style=plastic)](https://docs.rs/mpr121-hal/latest/)
+ [![MegaLinter](https://github.com/SiebenCorgie/mpr121-hal/actions/workflows/mega-linter.yaml/badge.svg)](https://github.com/SiebenCorgie/mpr121-hal/actions/workflows/mega-linter.yaml) [![Continuous Build](https://github.com/SiebenCorgie/mpr121-hal/actions/workflows/continuous-build.yaml/badge.svg?branch=main)](https://github.com/SiebenCorgie/mpr121-hal/actions/workflows/continuous-build.yaml)
+
 [![dependency status](https://deps.rs/repo/gitlab/tendsinmende/mpr121-hal/status.svg)](https://deps.rs/repo/gitlab/tendsinmende/mpr121-hal)
 
 [Mpr121](https://www.nxp.com/docs/en/data-sheet/MPR121.pdf) proximity capacitive touch sensor controller driver.
