@@ -140,6 +140,7 @@ impl<I2C: I2c> Mpr121<I2C> {
         Ok(result)
     }
 
+    #[maybe_async::maybe_async]
     pub async fn is_connected() -> bool {
         todo!();
     }
@@ -228,7 +229,7 @@ impl<I2C: I2c> Mpr121<I2C> {
     #[maybe_async::maybe_async]
     pub async fn get_touched(&mut self) -> Result<u16, Mpr121Error> {
         //mask upper four bits returns the rest
-        let unmasked = self.read_reg16(Register::TouchStatus8_11).await?;
+        let unmasked = self.read_reg16(Register::TouchStatus0_7).await?;
         Ok(unmasked & 0x0fff)
     }
 
