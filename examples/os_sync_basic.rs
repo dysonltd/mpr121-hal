@@ -3,7 +3,6 @@ use ftdi_embedded_hal::{self as hal, I2c};
 use mpr121_hal::mpr121::Mpr121;
 use mpr121_hal::Channel;
 use std::error::Error;
-use strum::IntoEnumIterator;
 
 #[cfg(feature = "async")]
 compile_error!("You cant run this example in async mode. Try setting the sync feature");
@@ -25,11 +24,13 @@ fn main() {
         println!("Release status: {:?}", release_status);
         std::thread::sleep(std::time::Duration::from_millis(1000));
         println!("Calling get_touched!");
-        for selected in Channel::iter() {
+        for selected in Channel::get_num_channels() {
             println!(
                 "Channel: {:?} : Touch Status: {:?}",
                 selected,
-                mpr121.get_sensor_touch(selected).unwrap(),
+                mpr121
+                    .get_sensor_touch(Channel::try_from(selected).unwrap())
+                    .unwrap(),
             );
         }
         // Add a delay to avoid flooding the output
