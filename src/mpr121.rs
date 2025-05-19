@@ -118,7 +118,8 @@ impl<I2C: I2c> Mpr121<I2C> {
         self.write_register(Register::FilterDelayCountLimitTouched, 0x00)
             .await?;
 
-        self.write_register(Register::Debounce, 0x0).await?;
+        self.write_register(Register::Debounce, DebounceNumber::Zero.into())
+            .await?;
         self.write_register(
             Register::GlobalChargeDischargeCurrentConfig,
             Register::GlobalChargeDischargeCurrentConfig.get_default_value(),
