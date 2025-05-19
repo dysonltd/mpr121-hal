@@ -24,7 +24,7 @@ fn main() {
         println!("Release status: {:?}", release_status);
         std::thread::sleep(std::time::Duration::from_millis(1000));
         println!("Calling get_touched!");
-        for selected in Channel::get_num_channels() {
+        for selected in 0..Channel::get_num_channels() {
             println!(
                 "Channel: {:?} : Touch Status: {:?}",
                 selected,
