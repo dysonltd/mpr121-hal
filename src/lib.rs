@@ -80,7 +80,7 @@ impl Channel {
     }
     /// Returns the amount of channels associated with the MPR121 hardware
     pub(crate) fn get_num_channels() -> u8 {
-        return 12;
+        12
     }
 }
 
