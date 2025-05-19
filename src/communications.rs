@@ -20,7 +20,13 @@ impl<I2C: I2c> Mpr121<I2C> {
         if reg.require_stop() {
             //set to stop
             self.i2c
-                .write(addr_val, &[Register::Ecr.into(), 0x00])
+                .write(
+                    addr_val,
+                    &[
+                        Register::Ecr.into(),
+                        Register::get_default_value(Register::Ecr),
+                    ],
+                )
                 .await
                 .map_err(|_| Mpr121Error::WriteError(Register::Ecr))?;
         }
