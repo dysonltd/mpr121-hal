@@ -6,7 +6,9 @@ use embedded_hal_async::i2c::I2c;
 use crate::{registers::*, Channel, DebounceNumber};
 use crate::{Mpr121Address, Mpr121Error};
 
-/// This is the Sensor itself and takes in an I2C Device or bus see the examples folder for more details. The driver can work in either Async or Sync mode depending on which version of the embedded-hal you are using
+/// This is the sensor itself and takes in an I2C Device or bus.
+/// See the examples folder for more details.
+/// The driver can work in either Async or Sync mode by specifying the the feature "async" or "sync".
 pub struct Mpr121<I2C: I2c> {
     pub(crate) i2c: I2C,
     pub(crate) addr: Mpr121Address,
