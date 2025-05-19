@@ -161,8 +161,6 @@ dependencies = [
  "maybe-async",
  "num_enum",
  "shared-bus",
- "strum",
- "strum_macros",
  "tests-common",
 ]
 
