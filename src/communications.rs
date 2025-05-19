@@ -24,7 +24,7 @@ impl<I2C: I2c> Mpr121<I2C> {
                     addr_val,
                     &[
                         Register::Ecr.into(),
-                        Register::get_default_value(Register::Ecr),
+                        Register::get_default_value(&Register::Ecr),
                     ],
                 )
                 .await

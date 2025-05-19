@@ -179,7 +179,7 @@ impl Register {
     }
 
     /// Some registers require for the sensor to be in stop mode before they can be accessed
-    pub fn require_stop(self) -> bool {
+    pub fn require_stop(&self) -> bool {
         !matches!(
             self,
             // These Registers require you to put the device in STOP mode in order to read/write too
@@ -196,7 +196,7 @@ impl Register {
     }
 
     /// Returns the default value of the Register
-    pub fn get_default_value(self) -> u8 {
+    pub fn get_default_value(&self) -> u8 {
         match self {
             Self::GlobalChargeDischargeCurrentConfig => 0x10,
             Self::GlobalChargeDischargeTimeConfig => 0x24,
