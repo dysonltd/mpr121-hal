@@ -13,10 +13,8 @@
 
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use registers::Register;
-use strum_macros::EnumIter;
 
 mod communications;
-mod constants;
 pub mod mpr121;
 mod registers;
 
@@ -58,9 +56,7 @@ pub enum Mpr121Address {
 }
 
 #[repr(u8)]
-#[derive(
-    Clone, Copy, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive, TryFromPrimitive, EnumIter, Debug,
-)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive, TryFromPrimitive, Debug)]
 /// This enum represents the channels of the sensor and is used to get the corresponding touch values
 pub enum Channel {
     Channel0,
@@ -78,8 +74,13 @@ pub enum Channel {
 }
 
 impl Channel {
+    /// Returns the bit mask associated with the selected channel
     pub(crate) fn get_bit_mask(self) -> u16 {
         1 << u8::from(self)
+    }
+    /// Returns the amount of channels associated with the MPR121 hardware
+    pub fn get_num_channels() -> u8 {
+        12
     }
 }
 

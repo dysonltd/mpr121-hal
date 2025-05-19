@@ -2,9 +2,8 @@
 use embedded_hal::i2c::I2c;
 #[cfg(feature = "async")]
 use embedded_hal_async::i2c::I2c;
-use strum::IntoEnumIterator;
 
-use crate::{constants::*, registers::*, Channel, DebounceNumber};
+use crate::{registers::*, Channel, DebounceNumber};
 use crate::{Mpr121Address, Mpr121Error};
 
 /// This is the Sensor itself and takes in an I2C Device or bus see the examples folder for more details. The driver can work in either Async or Sync mode depending on which version of the embedded-hal you are using
@@ -14,6 +13,12 @@ pub struct Mpr121<I2C: I2c> {
 }
 
 impl<I2C: I2c> Mpr121<I2C> {
+    /// Default Threshold
+    pub const DEFAULT_TOUCH_THRESHOLD: u8 = 12;
+    /// Default Release
+    pub const DEFAULT_RELEASE_THRESOLD: u8 = 6;
+    /// The value to be written to soft reset register, to trigger a reset
+    pub(crate) const SOFT_RESET_VALUE: u8 = 0x63;
     ///Creates the driver for the given I²C ports. Assumes that the I²C port is configured as master.
     ///
     /// If `use_auto_config` is set, the controller will use its auto configuration routine to setup
@@ -38,7 +43,7 @@ impl<I2C: I2c> Mpr121<I2C> {
         //TODO: Add Check to see if device is present on the bus This caught me out when refactoring and thus didnt realise it wasnt plugged in
         //reset
         let error = dev
-            .write_register(Register::SoftReset, SOFT_RESET_VALUE)
+            .write_register(Register::SoftReset, Self::SOFT_RESET_VALUE)
             .await
             .err();
         error.map(|e| match e {
@@ -73,8 +78,11 @@ impl<I2C: I2c> Mpr121<I2C> {
             }
         }
         //Initialise the device to the similar settings as Adafruit
-        dev.set_thresholds(DEFAULT_TOUCH_THRESHOLD, DEFAULT_RELEASE_THRESOLD)
-            .await?;
+        dev.set_thresholds(
+            Self::DEFAULT_TOUCH_THRESHOLD,
+            Self::DEFAULT_RELEASE_THRESOLD,
+        )
+        .await?;
         dev.initialise_registers(use_auto_config).await?;
 
         Ok(dev)
@@ -128,9 +136,7 @@ impl<I2C: I2c> Mpr121<I2C> {
             self.write_register(Register::LowLimit, 130).await?; // = UPLIMIT * 0.65
         }
         //enable electrodes and return to start mode
-        let ecr_setting = 0b10000000
-            + u8::try_from(Channel::iter().len())
-                .expect("This should not fail, number of channels should be able to fit in 8 bits"); // enable all 12 electrodes
+        let ecr_setting = 0b10000000 + Channel::get_num_channels();
         self.write_register(Register::Ecr, ecr_setting).await?;
         Ok(())
     }
@@ -164,12 +170,22 @@ impl<I2C: I2c> Mpr121<I2C> {
     /// In the event of an error [Mpr121Error] is returned
     #[maybe_async::maybe_async]
     pub async fn set_thresholds(&mut self, touch: u8, release: u8) -> Result<(), Mpr121Error> {
-        for channel in Channel::iter() {
+        for i in 0..Channel::get_num_channels() {
             //Note ignoring false set thresholds
-            self.write_register(Register::get_threshold_register(channel), touch)
-                .await?;
-            self.write_register(Register::get_release_register(channel), release)
-                .await?;
+            self.write_register(
+                Register::get_treshold_register(
+                    Channel::try_from(i).expect("Channel Iteration Should not fail"),
+                ),
+                touch,
+            )
+            .await?;
+            self.write_register(
+                Register::get_release_register(
+                    Channel::try_from(i).expect("Channel Iteration should not fail"),
+                ),
+                release,
+            )
+            .await?;
         }
         Ok(())
     }
