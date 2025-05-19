@@ -166,7 +166,7 @@ impl<I2C: I2c> Mpr121<I2C> {
     pub async fn set_thresholds(&mut self, touch: u8, release: u8) -> Result<(), Mpr121Error> {
         for channel in Channel::iter() {
             //Note ignoring false set thresholds
-            self.write_register(Register::get_treshold_register(channel), touch)
+            self.write_register(Register::get_threshold_register(channel), touch)
                 .await?;
             self.write_register(Register::get_release_register(channel), release)
                 .await?;

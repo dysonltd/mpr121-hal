@@ -108,7 +108,7 @@ pub enum Register {
 
 impl Register {
     /// Returns the threshold register associated with the channel
-    pub fn get_treshold_register(channel: Channel) -> Register {
+    pub fn get_threshold_register(channel: Channel) -> Register {
         match channel {
             Channel::Channel0 => Register::TouchThreshold0,
             Channel::Channel1 => Register::TouchThreshold1,
