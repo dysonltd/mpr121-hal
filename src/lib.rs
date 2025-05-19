@@ -74,13 +74,10 @@ pub enum Channel {
 }
 
 impl Channel {
+    pub const NUM_CHANNELS: u8 = 12;
     /// Returns the bit mask associated with the selected channel
     pub(crate) fn get_bit_mask(self) -> u16 {
         1 << u8::from(self)
-    }
-    /// Returns the amount of channels associated with the MPR121 hardware
-    pub fn get_num_channels() -> u8 {
-        12
     }
 }
 

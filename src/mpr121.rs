@@ -136,7 +136,7 @@ impl<I2C: I2c> Mpr121<I2C> {
             self.write_register(Register::LowLimit, 130).await?; // = UPLIMIT * 0.65
         }
         //enable electrodes and return to start mode
-        let ecr_setting = 0b10000000 + Channel::get_num_channels();
+        let ecr_setting = 0b10000000 + Channel::NUM_CHANNELS;
         self.write_register(Register::Ecr, ecr_setting).await?;
         Ok(())
     }
@@ -170,7 +170,7 @@ impl<I2C: I2c> Mpr121<I2C> {
     /// In the event of an error [Mpr121Error] is returned
     #[maybe_async::maybe_async]
     pub async fn set_thresholds(&mut self, touch: u8, release: u8) -> Result<(), Mpr121Error> {
-        for i in 0..Channel::get_num_channels() {
+        for i in 0..Channel::NUM_CHANNELS {
             //Note ignoring false set thresholds
             self.write_register(
                 Register::get_treshold_register(
