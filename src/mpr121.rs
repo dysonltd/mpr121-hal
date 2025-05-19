@@ -42,8 +42,6 @@ impl<I2C: I2c> Mpr121<I2C> {
     ) -> Result<Self, Mpr121Error> {
         let mut dev = Mpr121 { i2c, addr };
 
-        //TODO: Add Check to see if device is present on the bus This caught me out when refactoring and thus didnt realise it wasnt plugged in
-        //reset
         let error = dev
             .write_register(Register::SoftReset, Self::SOFT_RESET_VALUE)
             .await
