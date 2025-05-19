@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+- Implemented **Breaking** changes to the API and introduced further type safety to the internal code structure.
+- Added Debug macro to internal/external data structures
+
 ### Added
 
 - `async` capabilities via `maybe_async`. Enable the `async` feature (and disable `sync`) to use `async` versions of each function.
@@ -16,4 +19,5 @@ All notable changes to this project will be documented in this file.
 ## [0.4] - 2024-04-25
 
 ### Changed
+
 - Update to `embedded_hal` 1.0
