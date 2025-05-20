@@ -1,4 +1,5 @@
 use ftdi::Device;
+use ftdi_embedded_hal::Delay;
 use ftdi_embedded_hal::{self as hal, I2c};
 use mpr121_hal::mpr121::Mpr121;
 use mpr121_hal::Channel;
@@ -11,12 +12,12 @@ fn main() {
     // This is a placeholder for the main function.
     // You can add your code here to test the MPR121 functionality.
     let i2c_bus = setup_i2c().unwrap();
-    let delay_handler = ?; //TODO: Add delay here
+
     // You can now use the i2c instance to communicate with the MPR121.
     let mut mpr121 = Mpr121::new(
         i2c_bus,
         mpr121_hal::Mpr121Address::Default,
-        delay_handler,
+        &mut Delay::new(),
         true,
         true,
     )

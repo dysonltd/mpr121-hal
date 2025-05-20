@@ -43,15 +43,15 @@ impl<I2C: I2c> Mpr121<I2C> {
     ///
     /// In the event of an error, returns [Mpr121Error]
     #[maybe_async::maybe_async]
-    pub async fn new<Delay: DelayNs>(
+    pub async fn new(
         i2c: I2C,
         addr: Mpr121Address,
-        mut delay: Delay,
+        delay: &mut impl DelayNs,
         use_auto_config: bool,
         check_reset_flags: bool,
     ) -> Result<Self, Mpr121Error> {
         let mut dev = Mpr121 { i2c, addr };
-        dev.reset_verify(&mut delay).await?;
+        dev.reset_verify(delay).await?;
         // Stop
         dev.write_register(Register::Ecr, 0x0).await?;
 
@@ -139,9 +139,9 @@ impl<I2C: I2c> Mpr121<I2C> {
     /// if the device registers do not match what is expected. It is likely that the device is not connected. Due to the nature of this function
     /// it should only really be called once as it will reset any prexisting configurations applied
     #[maybe_async::maybe_async]
-    async fn reset_verify<D: DelayNs>(&mut self, delay: &mut D) -> Result<(), Mpr121Error> {
+    async fn reset_verify(&mut self, delay: &mut impl DelayNs) -> Result<(), Mpr121Error> {
         self.reset().await?;
-        delay.delay_ns(100).await;
+        delay.delay_us(100).await;
         // Verify that the default registers match up
         let register_1 = Register::GlobalChargeDischargeCurrentConfig;
         let read_register_1_config = self.read_reg8(register_1).await?;
@@ -194,7 +194,7 @@ impl<I2C: I2c> Mpr121<I2C> {
     ///
     /// Have a look at [new](Self::new) for further documentation.
     #[maybe_async::maybe_async]
-    pub async fn new_default<Delay: DelayNs>(i2c: I2C, delay: Delay) -> Result<Self, Mpr121Error> {
+    pub async fn new_default(i2c: I2C, delay: &mut impl DelayNs) -> Result<Self, Mpr121Error> {
         let result = Self::new(i2c, Mpr121Address::Default, delay, false, true).await?;
         Ok(result)
     }
