@@ -24,7 +24,7 @@ compile_error!("You cannot use both sync and async features at the same time. Pl
 #[cfg(all(not(feature = "async"), not(feature = "sync")))]
 compile_error!("You must enable either the sync or async feature. Please choose one.");
 
-/// The MPR121 Device can have a multitude of errors when running for the most part these will be causes by I2C errors. This library wraps the errors into the following enum
+/// The MPR121 Device has an Enumeration of potential driver errors, which are held in the enum below
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum Mpr121Error {
     ///If an operation exceeds the channel count (typically 12).
