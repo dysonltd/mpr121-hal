@@ -196,7 +196,7 @@ impl Register {
     }
 
     /// Returns the default value of the Register
-    pub fn get_default_value(&self) -> u8 {
+    pub fn get_initial_value(&self) -> u8 {
         match self {
             Self::GlobalChargeDischargeCurrentConfig => 0x10,
             Self::GlobalChargeDischargeTimeConfig => 0x24,

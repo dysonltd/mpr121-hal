@@ -70,7 +70,7 @@ impl<I2C: I2c> Mpr121<I2C> {
                 .read_reg8(Register::GlobalChargeDischargeTimeConfig)
                 .await?;
 
-            if config != Register::GlobalChargeDischargeTimeConfig.get_default_value() {
+            if config != Register::GlobalChargeDischargeTimeConfig.get_initial_value() {
                 return Err(Mpr121Error::InitFailed {
                     // Check if device is having a short circuit fault
                     over_current_protection: dev.is_over_current_set().await?,
@@ -122,7 +122,7 @@ impl<I2C: I2c> Mpr121<I2C> {
             .await?;
         self.write_register(
             Register::GlobalChargeDischargeCurrentConfig,
-            Register::GlobalChargeDischargeCurrentConfig.get_default_value(),
+            Register::GlobalChargeDischargeCurrentConfig.get_initial_value(),
         )
         .await?;
         self.write_register(Register::GlobalChargeDischargeTimeConfig, 0x20)
