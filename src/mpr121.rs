@@ -56,10 +56,9 @@ impl<I2C: I2c> Mpr121<I2C> {
                 was_read: false,
                 reg,
             },
-            _ => Mpr121Error::ResetFailed {
-                was_read: false,
-                reg: Register::SoftReset,
-            },
+            _ => {
+                unreachable!("There should only be a read or write error at this stage, perhaps a lower level API has changed?")
+            }
         });
 
         // Stop
