@@ -19,9 +19,9 @@ impl<I2C: I2c> Mpr121<I2C> {
 
         // Detect if sensor is already stopped, See Datasheet 5.11
         let ecr_stop_mode_bit_mask: u8 = 0b00111111;
-        let stopped = (ecr_state & ecr_stop_mode_bit_mask) != ecr_stop_mode_bit_mask;
+        let stopped = (ecr_state & ecr_stop_mode_bit_mask) != 0; // At least one of the electrodes is on
 
-        if reg.require_stop() {
+        if reg.require_stop() && !stopped {
             //set to stop
             self.i2c
                 .write(
@@ -42,7 +42,7 @@ impl<I2C: I2c> Mpr121<I2C> {
             .map_err(|_| Mpr121Error::WriteError(reg))?;
 
         //reset to old ecr state
-        if reg.require_stop() {
+        if reg.require_stop() && !stopped {
             self.i2c
                 .write(addr_val, &[Register::Ecr.into(), ecr_state])
                 .await
