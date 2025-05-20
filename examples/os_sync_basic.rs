@@ -15,7 +15,7 @@ fn main() {
     let mut mpr121 = Mpr121::new(i2c_bus, mpr121_hal::Mpr121Address::Default, true, true).unwrap();
     loop {
         // Call single read get_touched method
-        println!("Calling get_touched!");
+        println!("Calling get_touched! (grouped touch channels");
         let touch_status = mpr121.get_touched().unwrap();
         println!("Touch status: {:?}", touch_status);
         std::thread::sleep(std::time::Duration::from_millis(500));
@@ -25,7 +25,7 @@ fn main() {
         // Call individual channel methods
         // Wait as to not spam the console
         std::thread::sleep(std::time::Duration::from_millis(1000));
-        println!("Calling get_touched!");
+        println!("Calling get_snesor_touch! (individual touch channels");
         for selected in 0..Channel::NUM_CHANNELS {
             println!(
                 "Channel: {:?} : Touch Status: {:?}",
