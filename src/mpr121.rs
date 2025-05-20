@@ -21,6 +21,7 @@ impl<I2C: I2c> Mpr121<I2C> {
     pub const DEFAULT_RELEASE_THRESOLD: u8 = 6;
     /// The value to be written to soft reset register, to trigger a reset
     pub(crate) const SOFT_RESET_VALUE: u8 = 0x63;
+
     ///Creates the driver for the given I²C ports. Assumes that the I²C port is configured as master.
     ///
     /// If `use_auto_config` is set, the controller will use its auto configuration routine to setup
@@ -130,11 +131,12 @@ impl<I2C: I2c> Mpr121<I2C> {
 
         if use_auto_config {
             self.write_register(Register::AutoConfig0, 0x0b).await?;
-
-            //Use 3.3V VDD
-            self.write_register(Register::UpLimit, 200).await?; // = ((Vdd - 0.7)/Vdd) * 256;
-            self.write_register(Register::TargetLimit, 180).await?; // = UPLIMIT * 0.9
-            self.write_register(Register::LowLimit, 130).await?; // = UPLIMIT * 0.65
+            self.write_register(Register::UpSideLimit, limits::UP_SIDE)
+                .await?;
+            self.write_register(Register::TargetLevel, limits::TARGET_LEVEL)
+                .await?;
+            self.write_register(Register::LowSideLimit, limits::LOW_SIDE)
+                .await?;
         }
         //enable electrodes and return to start mode // See Datasheet 5.11
         let calibration_lock_bit = 0b1 << 7;

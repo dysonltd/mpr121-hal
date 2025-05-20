@@ -90,9 +90,9 @@ pub enum Register {
     Ecr = 0x5E,
     AutoConfig0 = 0x7B,
     AutoConfig1 = 0x7C,
-    UpLimit = 0x7D,
-    LowLimit = 0x7E,
-    TargetLimit = 0x7F,
+    UpSideLimit = 0x7D,
+    LowSideLimit = 0x7E,
+    TargetLevel = 0x7F,
     SoftReset = 0x80,
 
     // GPIO Registers (0x73-0x7A)
@@ -203,4 +203,12 @@ impl Register {
             _ => 0x00,
         }
     }
+}
+
+/// Limit Values for the Up and Low Side boundary checking on the electroludes. See Datasheet Page 19 for more details
+pub mod limits {
+    const VDD_VALUE: f32 = 3.3;
+    pub const UP_SIDE: u8 = (((VDD_VALUE - 0.7) / VDD_VALUE) * 256.0) as u8;
+    pub const LOW_SIDE: u8 = ((UP_SIDE as f32) * 0.65) as u8;
+    pub const TARGET_LEVEL: u8 = ((UP_SIDE as f32) * 0.9) as u8;
 }
