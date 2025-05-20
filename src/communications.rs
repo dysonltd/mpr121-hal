@@ -17,7 +17,11 @@ impl<I2C: I2c> Mpr121<I2C> {
         //Check in which mode we are by reading ECR.
         let ecr_state = self.read_reg8(Register::Ecr).await?;
 
-        if reg.require_stop() {
+        // Detect if sensor is already stopped, See Datasheet 5.11
+        let ecr_stop_mode_bit_mask: u8 = 0b00111111;
+        let stopped = (ecr_state & ecr_stop_mode_bit_mask) != ecr_stop_mode_bit_mask;
+
+        if reg.require_stop() && !stopped {
             //set to stop
             self.i2c
                 .write(
@@ -38,7 +42,7 @@ impl<I2C: I2c> Mpr121<I2C> {
             .map_err(|_| Mpr121Error::WriteError(reg))?;
 
         //reset to old ecr state
-        if reg.require_stop() {
+        if reg.require_stop() != stopped {
             self.i2c
                 .write(addr_val, &[Register::Ecr.into(), ecr_state])
                 .await
