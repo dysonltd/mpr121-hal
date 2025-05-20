@@ -191,7 +191,7 @@ impl<I2C: I2c> Mpr121<I2C> {
     ///
     /// In the event of an error [Mpr121Error] is returned
     #[maybe_async::maybe_async]
-    async fn is_over_current_set(&mut self) -> Result<bool, Mpr121Error> {
+    pub async fn is_over_current_set(&mut self) -> Result<bool, Mpr121Error> {
         const OVER_CURRENT_PROTECTION_FLAG_MASK: u8 = 0b1 << 7;
         let read = self.read_reg8(Register::TouchStatus8_11).await?;
         //If bit D7 is set, we have OVCF
