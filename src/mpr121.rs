@@ -136,8 +136,9 @@ impl<I2C: I2c> Mpr121<I2C> {
             self.write_register(Register::TargetLimit, 180).await?; // = UPLIMIT * 0.9
             self.write_register(Register::LowLimit, 130).await?; // = UPLIMIT * 0.65
         }
-        //enable electrodes and return to start mode
-        let ecr_setting = 0b10000000 + Channel::NUM_CHANNELS;
+        //enable electrodes and return to start mode // See Datasheet 5.11
+        let calibration_lock_bit = 0b1 << 7;
+        let ecr_setting = calibration_lock_bit + Channel::NUM_CHANNELS;
         self.write_register(Register::Ecr, ecr_setting).await?;
         Ok(())
     }
