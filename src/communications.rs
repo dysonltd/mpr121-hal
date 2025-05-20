@@ -19,7 +19,7 @@ impl<I2C: I2c> Mpr121<I2C> {
 
         // Detect if sensor is already stopped, See Datasheet 5.11
         let ecr_stop_mode_bit_mask: u8 = 0b00111111;
-        let stopped = (ecr_state & ecr_stop_mode_bit_mask) != 0; // At least one of the electrodes is on
+        let stopped = (ecr_state & ecr_stop_mode_bit_mask) == 0; // At least one of the electrodes if the bitmasked register is not 0
 
         if reg.require_stop() && !stopped {
             //set to stop
