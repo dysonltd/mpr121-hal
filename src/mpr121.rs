@@ -48,6 +48,12 @@ impl<I2C: I2c> Mpr121<I2C> {
     ) -> Result<Self, Mpr121Error> {
         let mut dev = Mpr121 { i2c, addr };
         dev.reset_verify(delay).await?;
+
+        // Check for overcurrent
+        if dev.is_over_current_set().await? {
+            return Err(Mpr121Error::OverCurrent);
+        }
+
         // Put Device in Stop Mode
         dev.write_register(Register::Ecr, 0x0).await?;
         //Initialise the device to the similar settings as Adafruit
@@ -185,7 +191,7 @@ impl<I2C: I2c> Mpr121<I2C> {
     ///
     /// In the event of an error [Mpr121Error] is returned
     #[maybe_async::maybe_async]
-    pub async fn is_over_current_set(&mut self) -> Result<bool, Mpr121Error> {
+    async fn is_over_current_set(&mut self) -> Result<bool, Mpr121Error> {
         const OVER_CURRENT_PROTECTION_FLAG_MASK: u8 = 0b1 << 7;
         let read = self.read_reg8(Register::TouchStatus8_11).await?;
         //If bit D7 is set, we have OVCF
