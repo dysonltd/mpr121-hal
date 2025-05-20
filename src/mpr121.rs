@@ -42,25 +42,7 @@ impl<I2C: I2c> Mpr121<I2C> {
         check_reset_flags: bool,
     ) -> Result<Self, Mpr121Error> {
         let mut dev = Mpr121 { i2c, addr };
-
-        let error = dev
-            .write_register(Register::SoftReset, Self::SOFT_RESET_VALUE)
-            .await
-            .err();
-        error.map(|e| match e {
-            Mpr121Error::ReadError(reg) => Mpr121Error::ResetFailed {
-                was_read: true,
-                reg,
-            },
-            Mpr121Error::WriteError(reg) => Mpr121Error::ResetFailed {
-                was_read: false,
-                reg,
-            },
-            _ => {
-                unreachable!("There should only be a read or write error at this stage, perhaps a lower level API has changed?")
-            }
-        });
-
+        dev.reset_verify().await?;
         // Stop
         dev.write_register(Register::Ecr, 0x0).await?;
 
@@ -144,6 +126,58 @@ impl<I2C: I2c> Mpr121<I2C> {
         Ok(())
     }
 
+    /// This method will reset and verify that the correct device is on the bus, if there is a failed read/write in the process or
+    /// if the device registers do not match what is expected. It is likely that the device is not connected. Due to the nature of this function
+    /// it should only really be called once as it will reset any prexisting configurations applied
+    #[maybe_async::maybe_async]
+    async fn reset_verify(&mut self) -> Result<(), Mpr121Error> {
+        self.reset().await?;
+        // Verify that the default registers match up
+        let register_1 = Register::GlobalChargeDischargeCurrentConfig;
+        let read_register_1_config = self.read_reg8(register_1).await?;
+        if read_register_1_config != register_1.get_initial_value() {
+            return Err(Mpr121Error::WrongDevice {
+                mismatched_register: register_1,
+                expected: register_1.get_initial_value(),
+                actual: read_register_1_config,
+            });
+        }
+        let register_2 = Register::GlobalChargeDischargeTimeConfig;
+        let read_register_2_config = self.read_reg8(register_2).await?;
+        if read_register_2_config != register_2.get_initial_value() {
+            return Err(Mpr121Error::WrongDevice {
+                mismatched_register: register_2,
+                expected: register_2.get_initial_value(),
+                actual: read_register_2_config,
+            });
+        }
+        Ok(())
+    }
+
+    /// Performs a software reset on the device, resetting the MPR121 Touch sensor back to default configuration
+    #[maybe_async::maybe_async]
+    pub async fn reset(&mut self) -> Result<(), Mpr121Error> {
+        let result = self
+            .write_register(Register::SoftReset, Self::SOFT_RESET_VALUE)
+            .await;
+
+        // Map any read/write errors to a failed reset error
+        result.err().map(|err| match err {
+                Mpr121Error::ReadError(reg) => Mpr121Error::ResetFailed {
+                    was_read: true,
+                    reg,
+                },
+                Mpr121Error::WriteError(reg) => Mpr121Error::ResetFailed {
+                    was_read: false,
+                    reg,
+                },
+                _ => {
+                    unreachable!("There should only be a read or write error at this stage, perhaps a lower level API has changed?")
+                }
+            });
+
+        Ok(())
+    }
     /// Initializes the driver assuming the sensors address is the default one (0x5a).
     /// If this fails, consider searching for the driver.
     /// Or following the documentation on setting a driver address, and use [new](Self::new) to specify the address.

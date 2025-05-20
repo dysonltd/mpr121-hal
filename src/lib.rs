@@ -41,6 +41,12 @@ pub enum Mpr121Error {
     ///If the reset did not happen as expected. if ovcp is set, the reset failed because over-current protection
     /// is active.
     InitFailed { over_current_protection: bool },
+    /// Wrong Device Connected
+    WrongDevice {
+        mismatched_register: Register,
+        expected: u8,
+        actual: u8,
+    },
 }
 
 ///The four values the sensor can be addressed as. Note that the address of the device is determined by
