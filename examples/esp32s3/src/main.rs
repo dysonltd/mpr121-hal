@@ -50,7 +50,7 @@ async fn main(spawner: Spawner) {
         ))
     };
     let i2c = I2cDevice::new(i2c_bus);
-    let mut mpr121 = Mpr121::new(i2c, Mpr121Address::Default, true, true)
+    let mut mpr121 = Mpr121::new(i2c, Mpr121Address::Default, embassy_time::Delay, true, true)
         .await
         .expect("Failed to initialize MPR121");
 

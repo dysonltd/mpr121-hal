@@ -1,12 +1,12 @@
 #[cfg(feature = "sync")]
 mod hal_imports {
-    pub use embedded_hal::delay::{self, DelayNs};
+    pub use embedded_hal::delay::DelayNs;
     pub use embedded_hal::i2c::I2c;
 }
 
 #[cfg(feature = "async")]
 mod hal_imports {
-    pub use embedded_hal_async::delay::{self, DelayNs};
+    pub use embedded_hal_async::delay::DelayNs;
     pub use embedded_hal_async::i2c::I2c;
 }
 
@@ -194,8 +194,8 @@ impl<I2C: I2c> Mpr121<I2C> {
     ///
     /// Have a look at [new](Self::new) for further documentation.
     #[maybe_async::maybe_async]
-    pub async fn new_default(i2c: I2C) -> Result<Self, Mpr121Error> {
-        let result = Self::new(i2c, Mpr121Address::Default, false, true).await?;
+    pub async fn new_default<Delay: DelayNs>(i2c: I2C, delay: Delay) -> Result<Self, Mpr121Error> {
+        let result = Self::new(i2c, Mpr121Address::Default, delay, false, true).await?;
         Ok(result)
     }
     /// Returns true if over-current is detected by the device.

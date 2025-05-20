@@ -11,8 +11,16 @@ fn main() {
     // This is a placeholder for the main function.
     // You can add your code here to test the MPR121 functionality.
     let i2c_bus = setup_i2c().unwrap();
+    let delay_handler = ?; //TODO: Add delay here
     // You can now use the i2c instance to communicate with the MPR121.
-    let mut mpr121 = Mpr121::new(i2c_bus, mpr121_hal::Mpr121Address::Default, true, true).unwrap();
+    let mut mpr121 = Mpr121::new(
+        i2c_bus,
+        mpr121_hal::Mpr121Address::Default,
+        delay_handler,
+        true,
+        true,
+    )
+    .unwrap();
     loop {
         // Call single read get_touched method
         println!("Calling get_touched! (grouped touch channels");
