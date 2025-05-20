@@ -59,18 +59,18 @@ pub enum Mpr121Address {
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, IntoPrimitive, TryFromPrimitive, Debug)]
 /// This enum represents the channels of the sensor and is used to get the corresponding touch values
 pub enum Channel {
-    Channel0,
-    Channel1,
-    Channel2,
-    Channel3,
-    Channel4,
-    Channel5,
-    Channel6,
-    Channel7,
-    Channel8,
-    Channel9,
-    Channel10,
-    Channel11,
+    Zero,
+    One,
+    Two,
+    Three,
+    Four,
+    Five,
+    Six,
+    Seven,
+    Eight,
+    Nine,
+    Ten,
+    Eleven,
 }
 
 impl Channel {
