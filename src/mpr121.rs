@@ -1,12 +1,22 @@
 #[cfg(feature = "sync")]
-use embedded_hal::i2c::I2c;
+mod hal_imports {
+    pub use embedded_hal::delay::DelayNs;
+    pub use embedded_hal::i2c::I2c;
+}
+
 #[cfg(feature = "async")]
-use embedded_hal_async::i2c::I2c;
+mod hal_imports {
+    pub use embedded_hal_async::delay::DelayNs;
+    pub use embedded_hal_async::i2c::I2c;
+}
 
 use crate::{registers::*, Channel, DebounceNumber};
 use crate::{Mpr121Address, Mpr121Error};
+use hal_imports::*;
 
-/// This is the Sensor itself and takes in an I2C Device or bus see the examples folder for more details. The driver can work in either Async or Sync mode depending on which version of the embedded-hal you are using
+/// This is the sensor itself and takes in an I2C Device or bus.
+/// See the examples folder for more details.
+/// The driver can work in either Async or Sync mode by specifying the the feature "async" or "sync".
 pub struct Mpr121<I2C: I2c> {
     pub(crate) i2c: I2C,
     pub(crate) addr: Mpr121Address,
@@ -19,6 +29,7 @@ impl<I2C: I2c> Mpr121<I2C> {
     pub const DEFAULT_RELEASE_THRESOLD: u8 = 6;
     /// The value to be written to soft reset register, to trigger a reset
     pub(crate) const SOFT_RESET_VALUE: u8 = 0x63;
+
     ///Creates the driver for the given I²C ports. Assumes that the I²C port is configured as master.
     ///
     /// If `use_auto_config` is set, the controller will use its auto configuration routine to setup
@@ -35,32 +46,12 @@ impl<I2C: I2c> Mpr121<I2C> {
     pub async fn new(
         i2c: I2C,
         addr: Mpr121Address,
+        delay: &mut impl DelayNs,
         use_auto_config: bool,
         check_reset_flags: bool,
     ) -> Result<Self, Mpr121Error> {
         let mut dev = Mpr121 { i2c, addr };
-
-        //TODO: Add Check to see if device is present on the bus This caught me out when refactoring and thus didnt realise it wasnt plugged in
-        //reset
-        let error = dev
-            .write_register(Register::SoftReset, Self::SOFT_RESET_VALUE)
-            .await
-            .err();
-        error.map(|e| match e {
-            Mpr121Error::ReadError(reg) => Mpr121Error::ResetFailed {
-                was_read: true,
-                reg,
-            },
-            Mpr121Error::WriteError(reg) => Mpr121Error::ResetFailed {
-                was_read: false,
-                reg,
-            },
-            _ => Mpr121Error::ResetFailed {
-                was_read: false,
-                reg: Register::SoftReset,
-            },
-        });
-
+        dev.reset_verify(delay).await?;
         // Stop
         dev.write_register(Register::Ecr, 0x0).await?;
 
@@ -70,7 +61,7 @@ impl<I2C: I2c> Mpr121<I2C> {
                 .read_reg8(Register::GlobalChargeDischargeTimeConfig)
                 .await?;
 
-            if config != Register::GlobalChargeDischargeTimeConfig.get_default_value() {
+            if config != Register::GlobalChargeDischargeTimeConfig.get_initial_value() {
                 return Err(Mpr121Error::InitFailed {
                     // Check if device is having a short circuit fault
                     over_current_protection: dev.is_over_current_set().await?,
@@ -118,10 +109,11 @@ impl<I2C: I2c> Mpr121<I2C> {
         self.write_register(Register::FilterDelayCountLimitTouched, 0x00)
             .await?;
 
-        self.write_register(Register::Debounce, 0x0).await?;
+        self.write_register(Register::Debounce, DebounceNumber::Zero.into())
+            .await?;
         self.write_register(
             Register::GlobalChargeDischargeCurrentConfig,
-            Register::GlobalChargeDischargeCurrentConfig.get_default_value(),
+            Register::GlobalChargeDischargeCurrentConfig.get_initial_value(),
         )
         .await?;
         self.write_register(Register::GlobalChargeDischargeTimeConfig, 0x20)
@@ -129,26 +121,81 @@ impl<I2C: I2c> Mpr121<I2C> {
 
         if use_auto_config {
             self.write_register(Register::AutoConfig0, 0x0b).await?;
-
-            //Use 3.3V VDD
-            self.write_register(Register::UpLimit, 200).await?; // = ((Vdd - 0.7)/Vdd) * 256;
-            self.write_register(Register::TargetLimit, 180).await?; // = UPLIMIT * 0.9
-            self.write_register(Register::LowLimit, 130).await?; // = UPLIMIT * 0.65
+            self.write_register(Register::UpSideLimit, limits::UP_SIDE)
+                .await?;
+            self.write_register(Register::TargetLevel, limits::TARGET_LEVEL)
+                .await?;
+            self.write_register(Register::LowSideLimit, limits::LOW_SIDE)
+                .await?;
         }
-        //enable electrodes and return to start mode
-        let ecr_setting = 0b10000000 + Channel::get_num_channels();
+        //enable electrodes and return to start mode // See Datasheet 5.11
+        let calibration_lock_bit = 0b1 << 7;
+        let ecr_setting = calibration_lock_bit + Channel::NUM_CHANNELS;
         self.write_register(Register::Ecr, ecr_setting).await?;
         Ok(())
     }
 
+    /// This method will reset and verify that the correct device is on the bus, if there is a failed read/write in the process or
+    /// if the device registers do not match what is expected. It is likely that the device is not connected. Due to the nature of this function
+    /// it should only really be called once as it will reset any prexisting configurations applied
+    #[maybe_async::maybe_async]
+    async fn reset_verify(&mut self, delay: &mut impl DelayNs) -> Result<(), Mpr121Error> {
+        self.reset().await?;
+        delay.delay_us(100).await;
+        // Verify that the default registers match up
+        let register_1 = Register::GlobalChargeDischargeCurrentConfig;
+        let read_register_1_config = self.read_reg8(register_1).await?;
+        if read_register_1_config != register_1.get_initial_value() {
+            return Err(Mpr121Error::WrongDevice {
+                mismatched_register: register_1,
+                expected: register_1.get_initial_value(),
+                actual: read_register_1_config,
+            });
+        }
+        let register_2 = Register::GlobalChargeDischargeTimeConfig;
+        let read_register_2_config = self.read_reg8(register_2).await?;
+        if read_register_2_config != register_2.get_initial_value() {
+            return Err(Mpr121Error::WrongDevice {
+                mismatched_register: register_2,
+                expected: register_2.get_initial_value(),
+                actual: read_register_2_config,
+            });
+        }
+        Ok(())
+    }
+
+    /// Performs a software reset on the device, resetting the MPR121 Touch sensor back to default configuration
+    #[maybe_async::maybe_async]
+    pub async fn reset(&mut self) -> Result<(), Mpr121Error> {
+        let result = self
+            .write_register(Register::SoftReset, Self::SOFT_RESET_VALUE)
+            .await;
+
+        // Map any read/write errors to a failed reset error
+        result.err().map(|err| match err {
+                Mpr121Error::ReadError(reg) => Mpr121Error::ResetFailed {
+                    was_read: true,
+                    reg,
+                },
+                Mpr121Error::WriteError(reg) => Mpr121Error::ResetFailed {
+                    was_read: false,
+                    reg,
+                },
+                _ => {
+                    unreachable!("There should only be a read or write error at this stage, perhaps a lower level API has changed?")
+                }
+            });
+
+        Ok(())
+    }
     /// Initializes the driver assuming the sensors address is the default one (0x5a).
     /// If this fails, consider searching for the driver.
     /// Or following the documentation on setting a driver address, and use [new](Self::new) to specify the address.
     ///
     /// Have a look at [new](Self::new) for further documentation.
     #[maybe_async::maybe_async]
-    pub async fn new_default(i2c: I2C) -> Result<Self, Mpr121Error> {
-        let result = Self::new(i2c, Mpr121Address::Default, false, true).await?;
+    pub async fn new_default(i2c: I2C, delay: &mut impl DelayNs) -> Result<Self, Mpr121Error> {
+        let result = Self::new(i2c, Mpr121Address::Default, delay, false, true).await?;
         Ok(result)
     }
     /// Returns true if over-current is detected by the device.
@@ -170,7 +217,7 @@ impl<I2C: I2c> Mpr121<I2C> {
     /// In the event of an error [Mpr121Error] is returned
     #[maybe_async::maybe_async]
     pub async fn set_thresholds(&mut self, touch: u8, release: u8) -> Result<(), Mpr121Error> {
-        for i in 0..Channel::get_num_channels() {
+        for i in 0..Channel::NUM_CHANNELS {
             //Note ignoring false set thresholds
             self.write_register(
                 Register::get_threshold_register(

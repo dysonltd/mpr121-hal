@@ -1,4 +1,5 @@
 use ftdi::Device;
+use ftdi_embedded_hal::Delay;
 use ftdi_embedded_hal::{self as hal, I2c};
 use mpr121_hal::mpr121::Mpr121;
 use mpr121_hal::Channel;
@@ -11,20 +12,30 @@ fn main() {
     // This is a placeholder for the main function.
     // You can add your code here to test the MPR121 functionality.
     let i2c_bus = setup_i2c().unwrap();
+
     // You can now use the i2c instance to communicate with the MPR121.
-    let mut mpr121 = Mpr121::new(i2c_bus, mpr121_hal::Mpr121Address::Default, true, true).unwrap();
+    let mut mpr121 = Mpr121::new(
+        i2c_bus,
+        mpr121_hal::Mpr121Address::Default,
+        &mut Delay::new(),
+        true,
+        true,
+    )
+    .unwrap();
     loop {
-        println!("Calling get_touched!");
-        // Read the touch status
+        // Call single read get_touched method
+        println!("Calling get_touched! (grouped touch channels");
         let touch_status = mpr121.get_touched().unwrap();
         println!("Touch status: {:?}", touch_status);
         std::thread::sleep(std::time::Duration::from_millis(500));
-        // Read the release status
         let release_status = mpr121.get_touched().unwrap();
         println!("Release status: {:?}", release_status);
+
+        // Call individual channel methods
+        // Wait as to not spam the console
         std::thread::sleep(std::time::Duration::from_millis(1000));
-        println!("Calling get_touched!");
-        for selected in 0..Channel::get_num_channels() {
+        println!("Calling get_snesor_touch! (individual touch channels");
+        for selected in 0..Channel::NUM_CHANNELS {
             println!(
                 "Channel: {:?} : Touch Status: {:?}",
                 selected,

@@ -90,9 +90,9 @@ pub enum Register {
     Ecr = 0x5E,
     AutoConfig0 = 0x7B,
     AutoConfig1 = 0x7C,
-    UpLimit = 0x7D,
-    LowLimit = 0x7E,
-    TargetLimit = 0x7F,
+    UpSideLimit = 0x7D,
+    LowSideLimit = 0x7E,
+    TargetLevel = 0x7F,
     SoftReset = 0x80,
 
     // GPIO Registers (0x73-0x7A)
@@ -110,76 +110,76 @@ impl Register {
     /// Returns the threshold register associated with the channel
     pub fn get_threshold_register(channel: Channel) -> Register {
         match channel {
-            Channel::Channel0 => Register::TouchThreshold0,
-            Channel::Channel1 => Register::TouchThreshold1,
-            Channel::Channel2 => Register::TouchThreshold2,
-            Channel::Channel3 => Register::TouchThreshold3,
-            Channel::Channel4 => Register::TouchThreshold4,
-            Channel::Channel5 => Register::TouchThreshold5,
-            Channel::Channel6 => Register::TouchThreshold6,
-            Channel::Channel7 => Register::TouchThreshold7,
-            Channel::Channel8 => Register::TouchThreshold8,
-            Channel::Channel9 => Register::TouchThreshold9,
-            Channel::Channel10 => Register::TouchThreshold10,
-            Channel::Channel11 => Register::TouchThreshold11,
+            Channel::Zero => Register::TouchThreshold0,
+            Channel::One => Register::TouchThreshold1,
+            Channel::Two => Register::TouchThreshold2,
+            Channel::Three => Register::TouchThreshold3,
+            Channel::Four => Register::TouchThreshold4,
+            Channel::Five => Register::TouchThreshold5,
+            Channel::Six => Register::TouchThreshold6,
+            Channel::Seven => Register::TouchThreshold7,
+            Channel::Eight => Register::TouchThreshold8,
+            Channel::Nine => Register::TouchThreshold9,
+            Channel::Ten => Register::TouchThreshold10,
+            Channel::Eleven => Register::TouchThreshold11,
         }
     }
     /// Returns the release register associated with the channel
     pub fn get_release_register(channel: Channel) -> Register {
         match channel {
-            Channel::Channel0 => Register::ReleaseThreshold0,
-            Channel::Channel1 => Register::ReleaseThreshold1,
-            Channel::Channel2 => Register::ReleaseThreshold2,
-            Channel::Channel3 => Register::ReleaseThreshold3,
-            Channel::Channel4 => Register::ReleaseThreshold4,
-            Channel::Channel5 => Register::ReleaseThreshold5,
-            Channel::Channel6 => Register::ReleaseThreshold6,
-            Channel::Channel7 => Register::ReleaseThreshold7,
-            Channel::Channel8 => Register::ReleaseThreshold8,
-            Channel::Channel9 => Register::ReleaseThreshold9,
-            Channel::Channel10 => Register::ReleaseThreshold10,
-            Channel::Channel11 => Register::ReleaseThreshold11,
+            Channel::Zero => Register::ReleaseThreshold0,
+            Channel::One => Register::ReleaseThreshold1,
+            Channel::Two => Register::ReleaseThreshold2,
+            Channel::Three => Register::ReleaseThreshold3,
+            Channel::Four => Register::ReleaseThreshold4,
+            Channel::Five => Register::ReleaseThreshold5,
+            Channel::Six => Register::ReleaseThreshold6,
+            Channel::Seven => Register::ReleaseThreshold7,
+            Channel::Eight => Register::ReleaseThreshold8,
+            Channel::Nine => Register::ReleaseThreshold9,
+            Channel::Ten => Register::ReleaseThreshold10,
+            Channel::Eleven => Register::ReleaseThreshold11,
         }
     }
 
     /// Returns the Most Significant Byte [MSB] register associated with the channel
     pub fn get_filtered_data_msb(channel: Channel) -> Register {
         match channel {
-            Channel::Channel0 => Register::FiltData0MSB,
-            Channel::Channel1 => Register::FiltData1MSB,
-            Channel::Channel2 => Register::FiltData2MSB,
-            Channel::Channel3 => Register::FiltData3MSB,
-            Channel::Channel4 => Register::FiltData4MSB,
-            Channel::Channel5 => Register::FiltData5MSB,
-            Channel::Channel6 => Register::FiltData6MSB,
-            Channel::Channel7 => Register::FiltData7MSB,
-            Channel::Channel8 => Register::FiltData8MSB,
-            Channel::Channel9 => Register::FiltData9MSB,
-            Channel::Channel10 => Register::FiltData10MSB,
-            Channel::Channel11 => Register::FiltData11MSB,
+            Channel::Zero => Register::FiltData0MSB,
+            Channel::One => Register::FiltData1MSB,
+            Channel::Two => Register::FiltData2MSB,
+            Channel::Three => Register::FiltData3MSB,
+            Channel::Four => Register::FiltData4MSB,
+            Channel::Five => Register::FiltData5MSB,
+            Channel::Six => Register::FiltData6MSB,
+            Channel::Seven => Register::FiltData7MSB,
+            Channel::Eight => Register::FiltData8MSB,
+            Channel::Nine => Register::FiltData9MSB,
+            Channel::Ten => Register::FiltData10MSB,
+            Channel::Eleven => Register::FiltData11MSB,
         }
     }
 
     /// Returns the baseline register associated with the channel
     pub fn get_baseline(channel: Channel) -> Register {
         match channel {
-            Channel::Channel0 => Register::BaseLine0,
-            Channel::Channel1 => Register::BaseLine1,
-            Channel::Channel2 => Register::BaseLine2,
-            Channel::Channel3 => Register::BaseLine3,
-            Channel::Channel4 => Register::BaseLine4,
-            Channel::Channel5 => Register::BaseLine5,
-            Channel::Channel6 => Register::BaseLine6,
-            Channel::Channel7 => Register::BaseLine7,
-            Channel::Channel8 => Register::BaseLine8,
-            Channel::Channel9 => Register::BaseLine9,
-            Channel::Channel10 => Register::BaseLine10,
-            Channel::Channel11 => Register::BaseLine11,
+            Channel::Zero => Register::BaseLine0,
+            Channel::One => Register::BaseLine1,
+            Channel::Two => Register::BaseLine2,
+            Channel::Three => Register::BaseLine3,
+            Channel::Four => Register::BaseLine4,
+            Channel::Five => Register::BaseLine5,
+            Channel::Six => Register::BaseLine6,
+            Channel::Seven => Register::BaseLine7,
+            Channel::Eight => Register::BaseLine8,
+            Channel::Nine => Register::BaseLine9,
+            Channel::Ten => Register::BaseLine10,
+            Channel::Eleven => Register::BaseLine11,
         }
     }
 
     /// Some registers require for the sensor to be in stop mode before they can be accessed
-    pub fn require_stop(self) -> bool {
+    pub fn require_stop(&self) -> bool {
         !matches!(
             self,
             // These Registers require you to put the device in STOP mode in order to read/write too
@@ -196,11 +196,19 @@ impl Register {
     }
 
     /// Returns the default value of the Register
-    pub fn get_default_value(self) -> u8 {
+    pub fn get_initial_value(&self) -> u8 {
         match self {
             Self::GlobalChargeDischargeCurrentConfig => 0x10,
             Self::GlobalChargeDischargeTimeConfig => 0x24,
             _ => 0x00,
         }
     }
+}
+
+/// Limit Values for the Up and Low Side boundary checking on the electroludes. See Datasheet Page 19 for more details
+pub mod limits {
+    const VDD_VALUE: f32 = 3.3;
+    pub const UP_SIDE: u8 = (((VDD_VALUE - 0.7) / VDD_VALUE) * 256.0) as u8;
+    pub const LOW_SIDE: u8 = ((UP_SIDE as f32) * 0.65) as u8;
+    pub const TARGET_LEVEL: u8 = ((UP_SIDE as f32) * 0.9) as u8;
 }
