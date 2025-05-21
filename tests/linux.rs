@@ -39,6 +39,6 @@ mod i2c_driver {
         Ok(i2c)
     }
     pub fn setup_delay() -> impl DelayNs {
-        return Delay::new();
+        Delay::new()
     }
 }
