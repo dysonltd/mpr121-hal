@@ -1,28 +1,32 @@
 #![no_std]
-use embedded_hal::i2c::I2c;
 use mpr121_hal::mpr121::Mpr121;
 
-pub fn generic_test_new<I2C>(i2c: I2C)
-where
-    I2C: I2c,
-{
-    let mpr121_sensor = Mpr121::new(i2c, mpr121_hal::Mpr121Address::Default, true, true);
+#[cfg(feature = "sync")]
+mod hal_imports {
+    pub use embedded_hal::delay::DelayNs;
+    pub use embedded_hal::i2c::I2c;
+}
+
+#[cfg(feature = "async")]
+mod hal_imports {
+    pub use embedded_hal_async::delay::DelayNs;
+    pub use embedded_hal_async::i2c::I2c;
+}
+
+use hal_imports::*;
+
+pub fn generic_test_new(i2c: impl I2c, delay: &mut impl DelayNs) {
+    let mpr121_sensor = Mpr121::new(i2c, mpr121_hal::Mpr121Address::Default, delay, true, true);
     assert!(mpr121_sensor.is_ok());
 }
 
-pub fn generic_test_new_default<I2C>(i2c: I2C)
-where
-    I2C: I2c,
-{
-    let mpr121_sensor = Mpr121::new_default(i2c);
+pub fn generic_test_new_default(i2c: impl I2c, delay: &mut impl DelayNs) {
+    let mpr121_sensor = Mpr121::new_default(i2c, delay);
     assert!(mpr121_sensor.is_ok());
 }
 
-pub fn generic_test_is_over_current_set<I2C>(i2c: I2C)
-where
-    I2C: I2c,
-{
-    let mut mpr121_sensor = Mpr121::new(i2c, mpr121_hal::Mpr121Address::Default, true, true)
+pub fn generic_test_is_over_current_set(i2c: impl I2c, delay: &mut impl DelayNs) {
+    let mut mpr121_sensor = Mpr121::new(i2c, mpr121_hal::Mpr121Address::Default, delay, true, true)
         .expect("Sensor Initialisation should not fail");
     let over_current_flag = mpr121_sensor
         .is_over_current_set()
@@ -31,11 +35,8 @@ where
     assert!(!over_current_flag);
 }
 
-pub fn generic_test_get_touched<I2C>(i2c: I2C)
-where
-    I2C: I2c,
-{
-    let mut mpr121_sensor = Mpr121::new(i2c, mpr121_hal::Mpr121Address::Default, true, true)
+pub fn generic_test_get_touched(i2c: impl I2c, delay: &mut impl DelayNs) {
+    let mut mpr121_sensor = Mpr121::new(i2c, mpr121_hal::Mpr121Address::Default, delay, true, true)
         .expect("Sensor Initialisation should not fail");
     assert!(
         mpr121_sensor

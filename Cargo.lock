@@ -152,7 +152,7 @@ dependencies = [
 
 [[package]]
 name = "mpr121-hal"
-version = "0.6.0"
+version = "0.5.0"
 dependencies = [
  "embedded-hal 1.0.0",
  "embedded-hal-async",
@@ -261,8 +261,8 @@ name = "tests-common"
 version = "0.1.0"
 dependencies = [
  "embedded-hal 1.0.0",
+ "embedded-hal-async",
  "embedded-hal-bus",
- "maybe-async",
  "mpr121-hal",
 ]
 

@@ -5,7 +5,9 @@ pub mod linux {
 }
 #[cfg(feature = "sync")]
 mod i2c_driver {
+    use embedded_hal::delay::DelayNs;
     use ftdi::Device;
+    use ftdi_embedded_hal::Delay;
     use ftdi_embedded_hal::{self as hal, I2c};
     use std::error::Error;
 
@@ -36,11 +38,7 @@ mod i2c_driver {
         };
         Ok(i2c)
     }
-}
-
-#[cfg(feature = "async")]
-mod i2c_driver {
-    pub fn setup_i2c() {
-        todo!("Not Implemented yet");
+    pub fn setup_delay() -> impl DelayNs {
+        return Delay::new();
     }
 }
