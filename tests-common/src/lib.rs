@@ -16,7 +16,7 @@ mod hal_imports {
 use hal_imports::*;
 
 pub fn generic_test_new(i2c: impl I2c, delay: &mut impl DelayNs) {
-    let mpr121_sensor = Mpr121::new(i2c, mpr121_hal::Mpr121Address::Default, delay, true, true);
+    let mpr121_sensor = Mpr121::new(i2c, mpr121_hal::Mpr121Address::Default, delay, true);
     assert!(mpr121_sensor.is_ok());
 }
 
@@ -26,7 +26,7 @@ pub fn generic_test_new_default(i2c: impl I2c, delay: &mut impl DelayNs) {
 }
 
 pub fn generic_test_is_over_current_set(i2c: impl I2c, delay: &mut impl DelayNs) {
-    let mut mpr121_sensor = Mpr121::new(i2c, mpr121_hal::Mpr121Address::Default, delay, true, true)
+    let mut mpr121_sensor = Mpr121::new(i2c, mpr121_hal::Mpr121Address::Default, delay, true)
         .expect("Sensor Initialisation should not fail");
     let over_current_flag = mpr121_sensor
         .is_over_current_set()
@@ -36,7 +36,7 @@ pub fn generic_test_is_over_current_set(i2c: impl I2c, delay: &mut impl DelayNs)
 }
 
 pub fn generic_test_get_touched(i2c: impl I2c, delay: &mut impl DelayNs) {
-    let mut mpr121_sensor = Mpr121::new(i2c, mpr121_hal::Mpr121Address::Default, delay, true, true)
+    let mut mpr121_sensor = Mpr121::new(i2c, mpr121_hal::Mpr121Address::Default, delay, true)
         .expect("Sensor Initialisation should not fail");
     assert!(
         mpr121_sensor
