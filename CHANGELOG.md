@@ -11,7 +11,6 @@ All notable changes to this project will be documented in this file.
 - Debug macro to internal/external data structures
 - First iteration of test harness for the library
 
-
 ### Changed
 
 - Implemented **Breaking** changes to the API and introduced further type safety to the internal code structure.
